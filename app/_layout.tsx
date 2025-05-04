@@ -1,3 +1,4 @@
+import 'react-native-get-random-values'; // Tilføj denne linje
 import { Buffer } from 'buffer';
 global.Buffer = Buffer;
 
