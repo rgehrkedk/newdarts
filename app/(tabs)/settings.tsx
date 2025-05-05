@@ -142,6 +142,7 @@ export default function Settings() {
     },
     {
       title: 'Game Settings',
+    
       data: [
         {
           icon: Volume2,
@@ -198,6 +199,7 @@ export default function Settings() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
+      <View style={styles.headerSpacer} />
       <SectionList
         sections={sections}
         keyExtractor={(item, index) => item.label + index}
@@ -220,9 +222,7 @@ export default function Settings() {
             <SettingItem {...item} />
           </View>
         )}
-        ListHeaderComponent={
-          <Text size="xl" weight="semibold" style={styles.title}>Settings</Text>
-        }
+
         ListFooterComponent={
           <Text 
             variant="secondary" 
@@ -242,12 +242,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  headerSpacer: {
+    height: 90, // Height to account for the header
+  },
   content: {
     padding: spacing.container,
+    paddingTop: 60, // Reduced top padding since we have the headerSpacer
   },
-  title: {
-    marginBottom: spacing.xl,
-  },
+
   sectionTitle: {
     marginBottom: spacing.sm,
     marginLeft: spacing.xs,

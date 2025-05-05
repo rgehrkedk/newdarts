@@ -5,6 +5,7 @@ import { Text } from '@/components/ui/atoms/Text';
 import { Card } from '@/components/ui/atoms/Card';
 import { ArrowUp, ArrowDown, Minus } from 'lucide-react-native';
 import { SavedPlayer } from '@/types/game';
+import { usePlayerTrends } from '@/hooks/usePlayerTrends';
 
 interface StatCardProps {
   title: string;
@@ -12,9 +13,10 @@ interface StatCardProps {
   suffix?: string;
   trend?: 'up' | 'down' | 'stable';
   trendLabel?: string;
+  percentChange?: number | null;
 }
 
-function StatCard({ title, value, suffix, trend, trendLabel }: StatCardProps) {
+function StatCard({ title, value, suffix, trend, trendLabel, percentChange }: StatCardProps) {
   const colors = useThemeColors();
 
   const getTrendColor = () => {
@@ -39,7 +41,10 @@ function StatCard({ title, value, suffix, trend, trendLabel }: StatCardProps) {
       {trend && (
         <View style={styles.trend}>
           <TrendIcon size={12} color={getTrendColor()} />
-          <Text size="xs" style={{ color: getTrendColor() }}>{trendLabel}</Text>
+          <Text size="xs" style={{ color: getTrendColor() }}>
+            {percentChange && percentChange > 0 ? `${percentChange.toFixed(1)}% ` : ''}
+            {trendLabel}
+          </Text>
         </View>
       )}
     </Card>
@@ -51,6 +56,15 @@ interface PerformanceSummaryProps {
 }
 
 export function PerformanceSummary({ player }: PerformanceSummaryProps) {
+  const { gameAverageTrend, checkoutTrend, winRateTrend } = usePlayerTrends(player);
+  
+  const getWinRateLabel = (trend: 'up' | 'down' | 'stable', winRate: number) => {
+    if (winRate >= 60) return 'Excellent';
+    if (winRate >= 50) return 'Good';
+    if (winRate >= 40) return 'Average';
+    return 'Needs work';
+  };
+  
   return (
     <View>
       <Text size="lg" weight="semibold" style={styles.title}>Performance Summary</Text>
@@ -59,26 +73,34 @@ export function PerformanceSummary({ player }: PerformanceSummaryProps) {
           title="Game Average"
           value={player.gameAvg.toFixed(1)}
           suffix="pts"
-          trend="up"
-          trendLabel="Improving"
+          trend={gameAverageTrend.trend}
+          trendLabel={gameAverageTrend.trend === 'up' ? 'Improving' : 
+                     gameAverageTrend.trend === 'down' ? 'Declining' : 'Stable'}
+          percentChange={gameAverageTrend.percentChange}
         />
         <StatCard
           title="Checkout %"
           value={player.checkoutPercentage.toFixed(1)}
           suffix="%"
-          trend="stable"
-          trendLabel="Stable"
+          trend={checkoutTrend.trend}
+          trendLabel={checkoutTrend.trend === 'up' ? 'Improving' : 
+                    checkoutTrend.trend === 'down' ? 'Declining' : 'Stable'}
+          percentChange={checkoutTrend.percentChange}
         />
         <StatCard
           title="Win Rate"
-          value={player.winRate?.toFixed(1) || "0"}
+          value={(player.winRate || 0).toFixed(1)}
           suffix="%"
-          trend={player.winRate > 50 ? 'up' : 'down'}
-          trendLabel={player.winRate > 50 ? 'Strong' : 'Needs Work'}
+          trend={winRateTrend.trend}
+          trendLabel={getWinRateLabel(winRateTrend.trend, player.winRate || 0)}
+          percentChange={winRateTrend.percentChange}
         />
-        <View style={styles.comingSoon}>
-          <Text variant="secondary" size="xs" align="center">More stats coming soon</Text>
-        </View>
+        <StatCard
+          title="Games Played"
+          value={player.gamesPlayed || 0}
+          trend="stable"
+          trendLabel={`Won: ${player.gamesWon || 0}`}
+        />
       </View>
     </View>
   );
@@ -109,16 +131,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
-  },
-  comingSoon: {
-    flex: 1,
-    minWidth: '45%',
-    padding: spacing.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderRadius: spacing.lg,
-    opacity: 0.5,
   },
 });

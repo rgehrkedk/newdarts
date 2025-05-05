@@ -43,6 +43,12 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
           highestCheckout: player.highest_checkout,
           bestLegAvg: player.best_leg_avg,
           winRate: player.win_rate,
+          totalTonPlus: player.total_ton_plus,
+          totalSixtyPlus: player.total_sixty_plus,
+          totalEightyPlus: player.total_eighty_plus,
+          totalOneEighties: player.total_one_eighties,
+          firstNine: player.first_nine,
+          avgFirstNine: player.avg_first_nine,
         })),
         error: null,
       });
@@ -125,6 +131,12 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
         highestCheckout: 0,
         bestLegAvg: 0,
         winRate: 0,
+        totalOneEighties: 0,
+        totalTonPlus: 0,
+        totalSixtyPlus: 0,
+        totalEightyPlus: 0,
+        firstNine: 0,
+        avgFirstNine: 0,
       };
 
       set(state => ({
@@ -173,6 +185,12 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
         highestCheckout: 0,
         bestLegAvg: 0,
         winRate: 0,
+        totalOneEighties: 0,
+        totalTonPlus: 0,
+        totalSixtyPlus: 0,
+        totalEightyPlus: 0,
+        firstNine: 0,
+        avgFirstNine: 0,
       };
 
       set(state => ({

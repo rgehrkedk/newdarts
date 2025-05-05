@@ -29,7 +29,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={styles.container}>
       <AuthProvider>
         <ThemeContext.Provider value={theme}>
-          <StatusBar style={theme.isDark ? 'light' : 'dark'} />
+          <StatusBar style={theme.isDark ? 'light' : 'dark'} translucent={true} />
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="auth" />
             <Stack.Screen name="(tabs)" />

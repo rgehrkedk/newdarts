@@ -46,7 +46,7 @@ export function PlayerStats({ player, showHeader = true }: PlayerStatsProps) {
             <StatItem
               icon={Trophy}
               label="Game Avg"
-              value={player.gameAvg.toFixed(1)}
+              value={player.gameAvg.toFixed(1) || '0.0'}
               color={colors.brand.success}
             />
             <StatItem

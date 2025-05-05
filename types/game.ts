@@ -37,6 +37,11 @@ export interface SavedPlayer {
   bestLegAvg?: number;
   winRate?: number;
   totalOneEighties?: number;
+  totalTonPlus?: number;
+  totalSixtyPlus?: number;
+  totalEightyPlus?: number;
+  firstNine?: number;
+  avgFirstNine?: number;
 }
 
 export type CheckoutType = "1dart" | "2dart" | "3dart" | "impossible" | "none";

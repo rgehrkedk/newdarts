@@ -34,8 +34,9 @@ export default function Play() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
-      <Text size="xl" weight="semibold" style={styles.title}>Choose Game Type</Text>
-      <View style={styles.cardsContainer}>
+      <View style={styles.contentContainer}>
+        <Text size="xl" weight="semibold" style={styles.title}>Choose Game Type</Text>
+        <View style={styles.cardsContainer}>
         {games.map((game, index) => (
           <Animated.View
             key={game.id}
@@ -71,6 +72,7 @@ export default function Play() {
           </Animated.View>
         ))}
       </View>
+      </View>
     </View>
   );
 }
@@ -78,13 +80,19 @@ export default function Play() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: spacing.container,
+  },
+  contentContainer: {
+    flex: 1,
+    paddingTop: 120, // Fixed padding for all platforms
+    paddingHorizontal: spacing.container,
+    paddingBottom: spacing.container,
   },
   title: {
     marginBottom: spacing.xl,
   },
   cardsContainer: {
     gap: spacing.lg,
+    flex: 1,
   },
   cardWrapper: {
     borderRadius: layout.radius.xl,

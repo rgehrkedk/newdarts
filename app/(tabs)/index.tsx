@@ -53,18 +53,13 @@ export default function Home() {
     { label: 'Win Rate', value: '68%', icon: Trophy, color: colors.avatar?.gold?.start || colors.brand.primary }
   ];
 
-  const platformSpecificStyles = Platform?.select({
-    ios: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.1,
-      shadowRadius: 2,
-    },
-    android: {
-      elevation: 2,
-    },
-    default: {},
-  });
+  const platformSpecificStyles = {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  };
 
   return (
     <ScrollView
@@ -72,7 +67,7 @@ export default function Home() {
       contentContainerStyle={[
         styles.content,
         {
-          paddingTop: Platform?.OS === 'ios' ? spacing.xl : spacing.container,
+          paddingTop: 130, // Account for the blurred header height
         }
       ]}
       showsVerticalScrollIndicator={false}

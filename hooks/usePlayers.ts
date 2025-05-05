@@ -6,7 +6,7 @@ export function usePlayers() {
   const { 
     players,
     fetchPlayers,
-    addPlayer,
+    createPlayer,
     updatePlayer,
     deletePlayer,
     supabase
@@ -43,8 +43,10 @@ export function usePlayers() {
 
   return {
     players,
-    addPlayer,
+    createPlayer,
     updatePlayer,
-    deletePlayer
+    deletePlayer,
+    loading: usePlayerStore(state => state.isLoading),
+    error: usePlayerStore(state => state.error)
   };
 }

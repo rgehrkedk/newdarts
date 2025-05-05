@@ -10,6 +10,7 @@ import { TrendChart } from './components/TrendChart';
 import { Highlights } from './components/Highlights';
 import { HighScores } from './components/HighScores';
 import { RecentGame } from './components/RecentGame';
+import { GameHistoryList } from './components/GameHistoryList';
 import { useState } from 'react';
 
 interface PlayerStatsModalProps {
@@ -70,22 +71,20 @@ export function PlayerStatsModal({ visible, onClose, player }: PlayerStatsModalP
           ))}
         </View>
 
-        <ScrollView style={styles.content}>
+        <View style={styles.content}>
           {activeTab === 'Overview' && (
-            <View style={styles.overview}>
+            <ScrollView style={styles.overview}>
               <PlayerHeader player={player} />
               <PerformanceSummary player={player} />
-              <TrendChart />
+              <TrendChart player={player} />
               <Highlights player={player} />
               <HighScores player={player} />
               <RecentGame player={player} />
-            </View>
+            </ScrollView>
           )}
           
           {activeTab === 'History' && (
-            <View style={styles.comingSoon}>
-              <Text variant="secondary" align="center">History view coming soon</Text>
-            </View>
+            <GameHistoryList player={player} />
           )}
           
           {activeTab === 'Achievements' && (
@@ -93,7 +92,7 @@ export function PlayerStatsModal({ visible, onClose, player }: PlayerStatsModalP
               <Text variant="secondary" align="center">Achievements coming soon</Text>
             </View>
           )}
-        </ScrollView>
+        </View>
       </View>
     </Modal>
   );
@@ -134,6 +133,10 @@ const styles = StyleSheet.create({
   overview: {
     padding: spacing.lg,
     gap: spacing.xl,
+    flex: 1,
+  },
+  historyContainer: {
+    flex: 1,
   },
   comingSoon: {
     flex: 1,

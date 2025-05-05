@@ -13,6 +13,7 @@ export default function Stats() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
+      <View style={{ height: 90 }} />
       <Text size="xl" weight="semibold" style={styles.title}>Player Statistics</Text>
       <Text variant="secondary" style={styles.subtitle}>View detailed statistics for all players</Text>
 
@@ -46,7 +47,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    marginTop: spacing.xl,
+    marginTop: spacing.sm,
     marginHorizontal: spacing.container,
   },
   subtitle: {
