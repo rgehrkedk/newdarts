@@ -8,7 +8,6 @@ import { SavedPlayer } from '@/types/game';
 import { BlurView } from 'expo-blur';
 import { useTheme } from '@/hooks/useTheme';
 import { PeriodFilter, Period } from './PeriodFilter';
-import { PlayerHeader } from './PlayerHeader';
 
 interface StickyHeaderProps {
   player: SavedPlayer;
@@ -66,10 +65,33 @@ export function StickyHeader({
     );
   }
   
-  // Regular header view
+  // Regular header view with inline player header
   return (
     <View style={styles.container}>
-      <PlayerHeader player={player} />
+      <View style={styles.headerContainer}>
+        <View style={styles.playerInfoContainer}>
+          <Avatar
+            name={player.name}
+            color={player.color}
+            size={64}
+            withShadow
+          />
+          <View style={styles.playerTextInfo}>
+            <Text size="xl" weight="semibold">{player.name}</Text>
+            <View style={styles.badges}>
+              <View style={[styles.badge, { backgroundColor: player.color+'4D' }]}>
+                <Text variant="primary" size="xs">
+                  {player.isGuest ? 'Guest Player' : 'You'}
+                </Text>
+              </View>
+              <Text variant="secondary" size="xs">•</Text>
+              <Text variant="primary" size="xs">
+                {player.gamesPlayed} {player.gamesPlayed === 1 ? 'Game' : 'Games'} Played
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
       <View style={styles.periodFilterContainer}>
         <PeriodFilter
           value={period}
@@ -84,11 +106,40 @@ export function StickyHeader({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-
   },
+  // Player header styles
+  headerContainer: {
+    marginVertical: spacing.sm,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    backgroundColor: 'transparent',
+    borderRadius: layout.radius.lg,
+  },
+  playerInfoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  playerTextInfo: {
+    marginLeft: spacing.md,
+    flex: 1,
+  },
+  badges: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+    flexWrap: 'wrap',
+  },
+  badge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xxs,
+    borderRadius: layout.radius.full,
+  },
+  // Period filter styles
   periodFilterContainer: {
     marginTop: spacing.md,
   },
+  // Sticky header styles
   blurContainer: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -109,9 +160,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     maxWidth: '40%', // Ensure name doesn't take too much space
-
   },
-  // Avatar now uses the Avatar component
   compactName: {
     flex: 1,
   },

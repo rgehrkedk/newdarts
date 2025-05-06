@@ -64,7 +64,7 @@ export function PlayerStatsOverlay({
     if (isVisible) {
       // Opening animation sequence
       progress.value = withTiming(1, {
-        duration: 500,
+        duration: 1000,
         easing: Easing.bezier(0.25, 0.1, 0.25, 1),
       });
       contentOpacity.value = withTiming(1, {
