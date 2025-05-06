@@ -1,8 +1,21 @@
 import { Stack } from 'expo-router';
 import { useThemeColors } from '@/constants/theme/colors';
+import { IconButton } from '@/components/ui/atoms/IconButton';
+import { ChevronLeft } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
 
 export default function SetupLayout() {
   const colors = useThemeColors();
+  const router = useRouter();
+
+  const BackButton = () => (
+    <IconButton
+      onPress={() => router.back()}
+      icon={ChevronLeft}
+      variant="transparent"
+      size={24}
+    />
+  );
 
   return (
     <Stack
@@ -15,20 +28,19 @@ export default function SetupLayout() {
           color: colors.text.primary,
         },
         presentation: 'modal',
+        headerLeft: () => <BackButton />,
       }}
     >
       <Stack.Screen
         name="index"
         options={{
           title: 'X01 Game',
-          headerBackTitle: 'Back',
         }}
       />
       <Stack.Screen
         name="cricket"
         options={{
           title: 'Cricket Game',
-          headerBackTitle: 'Back',
         }}
       />
     </Stack>

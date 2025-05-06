@@ -1,8 +1,10 @@
 export const typography = {
   // Font families
   families: {
-    regular: 'Inter-Regular',
-    semiBold: 'Inter-SemiBold',
+    light: undefined, // System font - light weight
+    regular: undefined, // System font
+    semiBold: undefined, // System font
+    bold: undefined,
   },
 
   // Font sizes
@@ -13,8 +15,8 @@ export const typography = {
     md: 16,
     lg: 18,
     xl: 24,
-    xxl: 32,
-    xxxl: 48,
+    xxl: 28,
+    xxxl: 32,
   },
 
   // Line heights

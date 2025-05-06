@@ -2,26 +2,59 @@ import 'react-native-get-random-values'; // Tilføj denne linje
 import { Buffer } from 'buffer';
 global.Buffer = Buffer;
 
-import { useEffect } from 'react';
-import { StyleSheet, Platform } from 'react-native';
+import { useEffect, useState } from 'react';
+import { StyleSheet, Platform, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import * as SplashScreen from 'expo-splash-screen';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { ThemeContext, useThemeProvider } from '@/hooks/useTheme';
-import { useFonts, Inter_400Regular, Inter_600SemiBold } from '@expo-google-fonts/inter';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from '@/providers/AuthProvider';
+import { BasicLoadingScreen } from '@/components/ui/organisms/BasicLoadingScreen';
+import { useLoadingScreen } from '@/hooks/useLoadingScreen';
+
+// Prevent the splash screen from auto-hiding
+SplashScreen.preventAutoHideAsync().catch(() => {
+  /* reloading the app might trigger some race conditions, ignore them */
+});
 
 export default function RootLayout() {
   useFrameworkReady();
   const theme = useThemeProvider();
+  const { isLoading, hideLoadingScreen, message, showLoadingScreen } = useLoadingScreen();
+  const [appIsReady, setAppIsReady] = useState(false);
 
-  const [fontsLoaded] = useFonts({
-    'Inter-Regular': Inter_400Regular,
-    'Inter-SemiBold': Inter_600SemiBold,
-  });
+  useEffect(() => {
+    async function prepare() {
+      try {
+        // Ensure loading screen is shown
+        showLoadingScreen('Preparing game...');
+        
+        // Simulate resource loading
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        // Tell the application to render
+        setAppIsReady(true);
+        // Hide the native splash screen
+        await SplashScreen.hideAsync();
+      }
+    }
 
-  if (!fontsLoaded) {
+    prepare();
+  }, []);
+
+  // Handle loading completion
+  const handleLoadingComplete = () => {
+    // Small delay before hiding the loading screen
+    setTimeout(() => {
+      hideLoadingScreen();
+    }, 500);
+  };
+
+  if (!appIsReady) {
     return null;
   }
 
@@ -30,6 +63,14 @@ export default function RootLayout() {
       <AuthProvider>
         <ThemeContext.Provider value={theme}>
           <StatusBar style={theme.isDark ? 'light' : 'dark'} translucent={true} />
+          
+          {/* Loading Screen - Always render but conditionally show */}
+          <BasicLoadingScreen 
+            onFinish={handleLoadingComplete} 
+            message={message} 
+          />
+          
+          {/* Main App Content */}
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="auth" />
             <Stack.Screen name="(tabs)" />

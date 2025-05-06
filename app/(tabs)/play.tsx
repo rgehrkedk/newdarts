@@ -1,11 +1,10 @@
-import { View, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { spacing, layout } from '@/constants/theme';
+import { spacing } from '@/constants/theme';
 import { useThemeColors } from '@/constants/theme/colors';
 import { Text } from '@/components/ui/atoms/Text';
 import { Target, Hash } from 'lucide-react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
+import { GradientCard } from '@/components/ui/molecules/GradientCard';
 
 export default function Play() {
   const router = useRouter();
@@ -37,41 +36,22 @@ export default function Play() {
       <View style={styles.contentContainer}>
         <Text size="xl" weight="semibold" style={styles.title}>Choose Game Type</Text>
         <View style={styles.cardsContainer}>
-        {games.map((game, index) => (
-          <Animated.View
-            key={game.id}
-            entering={FadeInDown.delay(index * 200).duration(600)}
-            style={styles.cardWrapper}
-          >
-            <LinearGradient
-              colors={game.gradientColors}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.gradientContainer}
-            >
-              <Pressable
-                style={[
-                  styles.card,
-                  { backgroundColor: colors.background.card.primary + '80' }
-                ]}
-                onPress={() => router.push(game.route)}
-                android_ripple={{ color: 'rgba(0,0,0,0.1)' }}
-              >
-                <View style={[styles.overlay, { backgroundColor: game.overlayColor }]} />
-                <View style={styles.content}>
-
-                  <Text size="xl" weight="semibold" style={styles.cardTitle}>
-                    {game.title}
-                  </Text>
-                  <Text style={styles.description}>
-                    {game.description}
-                  </Text>
-                </View>
-              </Pressable>
-            </LinearGradient>
-          </Animated.View>
-        ))}
-      </View>
+          {games.map((game, index) => (
+            <GradientCard
+              key={game.id}
+              title={game.title}
+              description={game.description}
+              gradientColors={game.gradientColors}
+              overlayColor={game.overlayColor}
+              onPress={() => router.push(game.route)}
+              animationDelay={index * 200}
+              icon={game.icon}
+              iconSize={24}
+              innerTransparency={colors.transparency.mediumLow}
+              outerTransparency={colors.transparency.full}
+            />
+          ))}
+        </View>
       </View>
     </View>
   );
@@ -93,42 +73,5 @@ const styles = StyleSheet.create({
   cardsContainer: {
     gap: spacing.lg,
     flex: 1,
-  },
-  cardWrapper: {
-    borderRadius: layout.radius.xl,
-    overflow: 'hidden',
-  },
-  gradientContainer: {
-    borderRadius: layout.radius.xl,
-  },
-  card: {
-    height: 200,
-    margin: spacing.xxs,
-    borderRadius: layout.radius.xl,
-    overflow: 'hidden',
-    backdropFilter: 'blur(20px)',
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  content: {
-    flex: 1,
-    padding: spacing.xl,
-    justifyContent: 'flex-end',
-  },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-  },
-  cardTitle: {
-
-    marginBottom: spacing.xs,
-  },
-  description: {
-
-  },
+  }
 });

@@ -21,6 +21,20 @@ export interface Player {
   totalScoreThrownThisMatch: number;
   // Track 180s
   oneEighties: number;
+  // Statistics
+  firstNine?: number;
+  avgFirstNine?: number;
+  bestLegAvg?: number;
+  highestCheckout?: number;
+  winRate?: number;
+  gamesWon?: number;
+  gamesPlayed?: number;
+  totalOneEighties?: number;
+  totalTonPlus?: number;
+  totalSixtyPlus?: number;
+  totalEightyPlus?: number;
+  isGuest?: boolean;
+  user_id?: string | null;
 }
 
 export interface SavedPlayer {
@@ -45,6 +59,8 @@ export interface SavedPlayer {
 }
 
 export type CheckoutType = "1dart" | "2dart" | "3dart" | "impossible" | "none";
+
+export type SortCategory = 'average' | 'checkout' | 'first9' | 'winrate' | 'games' | 'highestCheckout' | 'bestLeg' | '180s';
 
 export interface PendingScore {
   scored: number;

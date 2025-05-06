@@ -5,6 +5,7 @@ import { Text } from '@/components/ui/atoms/Text';
 import { Card } from '@/components/ui/atoms/Card';
 import { MoveRight, Star, Zap, Hash } from 'lucide-react-native';
 import { SavedPlayer } from '@/types/game';
+import { Period } from './PeriodFilter';
 
 interface HighlightItemProps {
   icon: typeof MoveRight;
@@ -37,9 +38,10 @@ function HighlightItem({ icon: Icon, color, label, value, suffix }: HighlightIte
 
 interface HighlightsProps {
   player: SavedPlayer;
+  period?: Period;
 }
 
-export function Highlights({ player }: HighlightsProps) {
+export function Highlights({ player, period }: HighlightsProps) {
   const colors = useThemeColors();
 
   return (
@@ -48,27 +50,27 @@ export function Highlights({ player }: HighlightsProps) {
       <View style={styles.grid}>
         <HighlightItem
           icon={MoveRight}
-          color={colors.avatar.purple}
+          color={colors.avatar.colors.purple}
           label="First 9 Avg"
           value={player.avgFirstNine?.toFixed(1) || "0.0"}
           suffix="pts"
         />
         <HighlightItem
           icon={Star}
-          color={colors.avatar.yellow}
+          color={colors.avatar.colors.yellow}
           label="Highest Checkout"
           value={player.highestCheckout || "0"}
         />
         <HighlightItem
           icon={Zap}
-          color={colors.avatar.red}
+          color={colors.avatar.colors.red}
           label="Best Leg"
           value={player.bestLegAvg?.toFixed(1) || "0.0"}
           suffix="avg"
         />
         <HighlightItem
           icon={Hash}
-          color={colors.avatar.blue}
+          color={colors.avatar.colors.blue}
           label="Darts Thrown"
           value="42"
         />

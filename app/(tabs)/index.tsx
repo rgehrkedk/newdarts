@@ -14,6 +14,7 @@ import { useThemeColors } from '@/constants/theme/colors';
 import { Text } from '@/components/ui/atoms/Text';
 import { StatItem } from '@/components/ui/atoms/StatItem';
 import Animated, { FadeInUp, FadeInDown } from 'react-native-reanimated';
+import { supabase } from '@/lib/supabase';
 
 export default function Home() {
   const router = useRouter();
@@ -22,36 +23,150 @@ export default function Home() {
   const { players, isLoading, error } = usePlayers();
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [statsModalVisible, setStatsModalVisible] = useState(false);
+  const [currentUserPlayer, setCurrentUserPlayer] = useState<SavedPlayer | null>(null);
+  const [recentProgress, setRecentProgress] = useState({
+    type: 'average',
+    value: 0,
+    period: 'last month'
+  });
+  const [lastMatch, setLastMatch] = useState({
+    result: 'None',
+    score: '-',
+    opponent: '-',
+    average: 0,
+    date: 'No recent games'
+  });
+  const [quickStats, setQuickStats] = useState([
+    { label: '180s', value: '0', icon: Target, color: colors.avatar?.purple || colors.brand.primary },
+    { label: 'Matches', value: '0', icon: Swords, color: colors.avatar?.blue || colors.brand.primary },
+    { label: 'Win Rate', value: '0%', icon: Trophy, color: colors.avatar?.gold?.start || colors.brand.primary }
+  ]);
 
   const topPlayers = [...(players || [])]
     .sort((a, b) => b.gameAvg - a.gameAvg)
     .slice(0, 3);
 
+  // Find the current user's player data
+  useEffect(() => {
+    if (players && players.length > 0 && session?.user?.id) {
+      const userPlayer = players.find(player => player.user_id === session.user.id);
+      
+      if (userPlayer) {
+        setCurrentUserPlayer(userPlayer);
+        
+        // Update stats with the player data
+        setQuickStats([
+          { 
+            label: '180s', 
+            value: userPlayer.totalOneEighties?.toString() || '0', 
+            icon: Target, 
+            color: colors.avatar?.purple || colors.brand.primary 
+          },
+          { 
+            label: 'Matches', 
+            value: userPlayer.gamesPlayed?.toString() || '0', 
+            icon: Swords, 
+            color: colors.avatar?.blue || colors.brand.primary 
+          },
+          { 
+            label: 'Win Rate', 
+            value: `${userPlayer.winRate?.toFixed(0) || 0}%`, 
+            icon: Trophy, 
+            color: colors.avatar?.gold?.start || colors.brand.primary 
+          }
+        ]);
+        
+        // Set recent progress based on trends
+        if (userPlayer.gameAvg) {
+          setRecentProgress({
+            type: 'average',
+            value: Math.round((userPlayer.gameAvg * 0.08) * 10) / 10, // Mock trend data as 8% improvement
+            period: 'last month'
+          });
+        }
+      }
+    }
+  }, [players, session, colors.avatar, colors.brand.primary]);
+  
+  // If the user has game history, update lastMatch
+  useEffect(() => {
+    const fetchLastGame = async () => {
+      if (currentUserPlayer) {
+        try {
+          const { data, error } = await supabase
+            .from('game_participants')
+            .select(`
+              game_id,
+              game_average,
+              won,
+              legs_won,
+              sets_won,
+              games (
+                id,
+                created_at,
+                completed_at,
+                total_legs,
+                total_sets
+              )
+            `)
+            .eq('player_id', currentUserPlayer.id)
+            .order('created_at', { ascending: false })
+            .limit(1);
+            
+          if (data && data.length > 0 && data[0].games.completed_at) {
+            // Get opponent info
+            const { data: opponents } = await supabase
+              .from('game_participants')
+              .select(`
+                player_id,
+                game_average,
+                legs_won,
+                sets_won,
+                players (
+                  name,
+                  color
+                )
+              `)
+              .eq('game_id', data[0].game_id)
+              .neq('player_id', currentUserPlayer.id)
+              .limit(1);
+              
+            if (opponents && opponents.length > 0) {
+              const gameDate = new Date(data[0].games.created_at);
+              const today = new Date();
+              
+              let dateText = 'Today';
+              if (gameDate.getDate() !== today.getDate() || 
+                  gameDate.getMonth() !== today.getMonth() || 
+                  gameDate.getFullYear() !== today.getFullYear()) {
+                dateText = gameDate.toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric'
+                });
+              }
+              
+              setLastMatch({
+                result: data[0].won ? 'Won' : 'Lost',
+                score: `${data[0].sets_won || 0}-${opponents[0].sets_won || 0}`,
+                opponent: opponents[0].players.name,
+                average: data[0].game_average || 0,
+                date: dateText
+              });
+            }
+          }
+        } catch (err) {
+          console.error('Error fetching last game:', err);
+        }
+      }
+    };
+    
+    fetchLastGame();
+  }, [currentUserPlayer]);
+
   const handlePlayerPress = (player) => {
     setSelectedPlayer(player);
     setStatsModalVisible(true);
   };
-
-  // Mock data for demonstration - replace with real data in production
-  const recentProgress = {
-    type: 'average',
-    value: 3.1,
-    period: 'last month'
-  };
-
-  const lastMatch = {
-    result: 'Won',
-    score: '3-2',
-    opponent: 'Michael',
-    average: 85.5,
-    date: 'Today'
-  };
-
-  const quickStats = [
-    { label: '180s', value: '12', icon: Target, color: colors.avatar?.purple || colors.brand.primary },
-    { label: 'Matches', value: '45', icon: Swords, color: colors.avatar?.blue || colors.brand.primary },
-    { label: 'Win Rate', value: '68%', icon: Trophy, color: colors.avatar?.gold?.start || colors.brand.primary }
-  ];
 
   const platformSpecificStyles = {
     shadowColor: '#000',
@@ -72,29 +187,35 @@ export default function Home() {
       ]}
       showsVerticalScrollIndicator={false}
     >
+      {/* Welcome Message */}
+      <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.welcomeContainer}>
+  <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+    <Text weight="light" variant="secondary" size="xxl" style={{ marginRight: 6 }}>Welcome back,</Text>
+    <Text weight="bold" size="xxl">
+      {players.find(player => player.user_id === session?.user?.id)?.name || 'Player'}
+    </Text>
+  </View>
+</Animated.View>
+      
       {/* Game Buttons */}
       <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.gameButtonsContainer}>
-        <Pressable
-          style={[styles.gameButton, { backgroundColor: colors.brand.primary }, platformSpecificStyles]}
-          onPress={() => router.push('/(tabs)/setup')}
-          android_ripple={{ color: 'rgba(255,255,255,0.2)', borderless: false }}
-        >
-          <Plus size={24} color="#fff" />
-          <Text size="md" weight="semibold" style={{ color: '#fff' }}>
-            X01 Game
-          </Text>
-        </Pressable>
-        
-        <Pressable
-          style={[styles.gameButton, { backgroundColor: colors.background.tertiary }, platformSpecificStyles]}
-          onPress={() => router.push('/(tabs)/setup/cricket')}
+        <Button
+          variant="gradient-border-primary"
+          label="X01 Game"
+          icon={Plus}
+          onPress={() => router.push('/game/setup')}
+          style={styles.gameButtonFlex}
           android_ripple={{ color: 'rgba(0,0,0,0.05)', borderless: false }}
-        >
-          <Plus size={24} color={colors.text.primary} />
-          <Text size="md" weight="semibold">
-            Cricket
-          </Text>
-        </Pressable>
+        />
+        
+        <Button
+          variant="gradient-border-secondary"
+          label="Cricket"
+          icon={Plus}
+          onPress={() => router.push('/game/setup/cricket')}
+          style={styles.gameButtonFlex}
+          android_ripple={{ color: 'rgba(0,0,0,0.05)', borderless: false }}
+        />
       </Animated.View>
 
       {/* Progress Card */}
@@ -168,14 +289,19 @@ export default function Home() {
           <View style={styles.matchContent}>
             <View style={styles.matchResultContainer}>
               <View>
-                <Text size="lg" weight="semibold" style={{ color: colors.brand.success }}>
+                <Text 
+                  size="lg" 
+                  weight="semibold" 
+                  style={{ color: lastMatch.result === 'Won' ? colors.brand.success : 
+                          lastMatch.result === 'Lost' ? colors.brand.error : colors.text.secondary }}
+                >
                   {lastMatch.result}
                 </Text>
                 <Text variant="secondary" size="sm">vs {lastMatch.opponent}</Text>
               </View>
               <View style={styles.scoreContainer}>
                 <Text size="xl" weight="semibold">{lastMatch.score}</Text>
-                <Text variant="secondary" size="sm">{lastMatch.average} avg</Text>
+                <Text variant="secondary" size="sm">{lastMatch.average > 0 ? `${lastMatch.average.toFixed(1)} avg` : ''}</Text>
               </View>
             </View>
             <View style={styles.matchDate}>
@@ -246,6 +372,10 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
     gap: spacing.lg,
   },
+  welcomeContainer: {
+    marginBottom: spacing.md,
+  },
+
   gameButtonsContainer: {
     flexDirection: 'row',
     gap: spacing.md,
@@ -259,6 +389,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: spacing.sm,
+  },
+  gameButtonFlex: {
+    flex: 1,
   },
   card: {
     borderRadius: layout.radius.xl,

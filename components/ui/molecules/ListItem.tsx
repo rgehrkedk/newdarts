@@ -3,6 +3,7 @@ import { spacing, layout } from '@/constants/theme';
 import { useThemeColors } from '@/constants/theme/colors';
 import { Settings, X, User, Trash2, BarChart } from 'lucide-react-native';
 import { Text } from '../atoms/Text';
+import { Avatar } from '../atoms/Avatar';
 import Animated, { FadeIn, runOnJS } from 'react-native-reanimated';
 import { useEffect, useRef } from 'react';
 
@@ -82,14 +83,12 @@ export function ListItem({
         <View style={styles.content}>
           {leftContent}
           {showAvatar && (
-            <Animated.View 
-              style={[styles.avatar, { backgroundColor: avatarColor || colors.avatar.colors.green }]}
-              sharedTransitionTag={`avatar-${id}`}
-            >
-              <Text style={[styles.avatarText, { color: colors.white }]}>
-                {title.charAt(0).toUpperCase()}
-              </Text>
-            </Animated.View>
+            <Avatar
+              name={title}
+              color={avatarColor || colors.avatar.colors.green}
+              size={40}
+              sharedTransitionTag={id}
+            />
           )}
           {LeftIcon && <LeftIcon size={24} color={colors.text.primary} />}
           <View style={styles.textContainer}>
@@ -163,17 +162,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.md,
   },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  // Avatar now uses the Avatar component
   textContainer: {
     gap: spacing.xs,
   },

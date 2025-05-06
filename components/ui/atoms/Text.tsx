@@ -3,8 +3,8 @@ import { spacing, typography } from '@/constants/theme';
 import { useThemeColors } from '@/constants/theme/colors';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
-type TextSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl' | 'xxxl';
-type TextWeight = 'regular' | 'semibold';
+type TextSize = 'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl' | 'xxxl';
+type TextWeight = 'light' | 'regular' | 'semibold' | 'bold';
 type TextVariant = 'primary' | 'secondary' | 'success' | 'error' | 'brand';
 type TextAlign = 'left' | 'center' | 'right';
 
@@ -46,13 +46,6 @@ export function Text({
     }
   };
 
-  const getFontFamily = () => {
-    switch (weight) {
-      case 'semibold': return typography.families.semiBold;
-      default: return typography.families.regular;
-    }
-  };
-
   const getColor = () => {
     switch (variant) {
       case 'secondary': return colors.text.secondary;
@@ -73,7 +66,7 @@ export function Text({
         {
           color: getColor(),
           fontSize: getFontSize(),
-          fontFamily: getFontFamily(),
+          fontWeight: weight === 'bold' ? '700' : weight === 'semibold' ? '600' : weight === 'light' ? '300' : '400',
           textAlign: align,
         },
         style

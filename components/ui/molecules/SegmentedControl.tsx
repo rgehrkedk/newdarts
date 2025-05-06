@@ -22,13 +22,15 @@ interface SegmentedControlProps<T> {
   value: T;
   onChange: (value: T) => void;
   size?: 'sm' | 'md' | 'lg';
+  variant?: 'primary' | 'neutral';
 }
 
 export function SegmentedControl<T>({ 
   options, 
   value,
   onChange,
-  size = 'md'
+  size = 'md',
+  variant = 'primary'
 }: SegmentedControlProps<T>) {
   const colors = useThemeColors();
   const [containerWidth, setContainerWidth] = useState(0);
@@ -133,7 +135,7 @@ export function SegmentedControl<T>({
             style={[
               styles.indicator,
               { 
-                backgroundColor: colors.brand.primary,
+                backgroundColor: variant === 'primary' ? colors.brand.primary : colors.background.secondary,
                 width: optionWidth - spacing.xs,
                 height: sizeStyles.height - spacing.xs,
                 borderRadius: layout.radius.lg - spacing.xxs,
@@ -165,7 +167,11 @@ export function SegmentedControl<T>({
                 weight={value === option.value ? 'semibold' : 'regular'}
                 style={[
                   styles.optionText,
-                  { color: value === option.value ? colors.white : colors.text.secondary }
+                  { 
+                    color: value === option.value 
+                      ? (variant === 'primary' ? colors.white : colors.text.primary)
+                      : colors.text.secondary 
+                  }
                 ]}
                 numberOfLines={1}
               >

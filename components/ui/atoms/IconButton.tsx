@@ -6,9 +6,10 @@ import { Video as LucideIcon } from 'lucide-react-native';
 interface IconButtonProps {
   onPress: () => void;
   icon: LucideIcon;
-  variant?: 'primary' | 'secondary' | 'error';
+  variant?: 'primary' | 'secondary' | 'transparent' | 'error';
   size?: number;
   disabled?: boolean;
+  style?: any;
 }
 
 export function IconButton({ 
@@ -16,7 +17,8 @@ export function IconButton({
   icon: Icon, 
   variant = 'primary',
   size = 20,
-  disabled = false 
+  disabled = false,
+  style
 }: IconButtonProps) {
   const colors = useThemeColors();
 
@@ -27,6 +29,8 @@ export function IconButton({
         return colors.brand.primary;
       case 'secondary':
         return colors.background.secondary;
+      case 'transparent':
+        return 'transparent';
       case 'error':
         return colors.brand.error;
       default:
@@ -41,6 +45,7 @@ export function IconButton({
       case 'error':
         return colors.white;
       case 'secondary':
+      case 'transparent':
         return colors.text.primary;
       default:
         return colors.white;
@@ -53,7 +58,8 @@ export function IconButton({
       disabled={disabled}
       style={[
         styles.button,
-        { backgroundColor: getBackgroundColor() }
+        { backgroundColor: getBackgroundColor() },
+        style
       ]}
     >
       <Icon size={size} color={getIconColor()} />

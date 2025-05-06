@@ -5,7 +5,7 @@ import { useTheme } from '@/hooks/useTheme';
 const palette = {
   neutral: {
     50: '#f4f4f5',
-    100: '#e3e4e8',
+    100: '#e8e9ec',
     200: '#d6d7dc',
     300: '#b9bbc6',
     400: '#9da0ae',
@@ -62,18 +62,38 @@ const palette = {
   },
   avatar: {
     green: '#22C55E',
+    greenGradient: '#16A34A',
     blue: '#3B82F6',
+    blueGradient: '#1D4ED8',
     purple: '#8B5CF6',
+    purpleGradient: '#7C3AED',
     pink: '#EC4899',
+    pinkGradient: '#DB2777',
     orange: '#F97316',
+    orangeGradient: '#EA580C',
     red: '#EF4444',
+    redGradient: '#DC2626',
     yellow: '#EAB308',
+    yellowGradient: '#CA8A04',
     teal: '#14B8A6',
+    tealGradient: '#0D9488',
     gold: {
       start: '#FFD700',
       end: '#FFA500',
       text: '#121212',
     }
+  },
+  
+  // Transparency values for use with components like GradientCard
+  transparency: {
+    full: 'FF',      // 100% opacity
+    high: 'E6',      // 90% opacity
+    medium: 'CC',    // 80% opacity
+    mediumLow: 'B3', // 70% opacity
+    low: '99',       // 60% opacity
+    veryLow: '66',   // 40% opacity
+    faint: '4D',     // 30% opacity
+    transparent: '00' // 0% opacity
   }
 } as const;
 
@@ -81,6 +101,9 @@ const semanticLight = {
   // Base colors
   black: palette.neutral[900],
   white: palette.neutral[50],
+  
+  // Transparency values
+  transparency: palette.transparency,
 
   // Background colors
   background: {
@@ -108,6 +131,8 @@ const semanticLight = {
     onPrimary: palette.neutral[50],
     onSecondary: palette.neutral[900],
     onGhost: palette.neutral[500],
+    onBrand: palette.brand.primary[100],
+    brand: palette.brand.primary[600],
   },
 
   // Border colors
@@ -146,6 +171,9 @@ const semanticDark = {
   // Base colors
   black: palette.neutral[950],
   white: palette.neutral[50],
+  
+  // Transparency values
+  transparency: palette.transparency,
 
   // Background colors
   background: {
@@ -173,6 +201,8 @@ const semanticDark = {
     onPrimary: palette.neutral[50],
     onSecondary: palette.neutral[50],
     onGhost: palette.neutral[400],
+    onBrand: palette.brand.primary[800],
+    brand: palette.brand.primary[500],
   },
 
   // Border colors
@@ -207,7 +237,9 @@ const semanticDark = {
   },
 } as const;
 
-export type Colors = typeof semanticLight;
+export type Colors = typeof semanticLight & {
+  transparency: typeof palette.transparency;
+};
 
 export function useThemeColors() {
   const { isDark } = useTheme();

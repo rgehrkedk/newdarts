@@ -3,6 +3,7 @@ import { Trophy, ArrowUp, ArrowDown } from 'lucide-react-native';
 import { spacing, layout } from '@/constants/theme';
 import { useThemeColors } from '@/constants/theme/colors';
 import { Text } from '@/components/ui/atoms/Text';
+import { Avatar } from '@/components/ui/atoms/Avatar';
 import { Accordion } from '@/components/ui/molecules/Accordion';
 import { Player } from '@/types/game';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -64,8 +65,12 @@ export function PlayerAccordion({
           </View>
         )}
       </View>
-      <View style={[styles.avatar, { backgroundColor: player.color }]}>
-        <Text style={styles.avatarText}>{player.name[0].toUpperCase()}</Text>
+      <View style={{ marginRight: spacing.md }}>
+        <Avatar
+          name={player.name}
+          color={player.color}
+          size={40}
+        />
       </View>
       <View style={styles.nameContainer}>
         <Text weight="semibold">{player.name}</Text>
@@ -134,19 +139,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  avatarText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  // Avatar now uses the Avatar component
   nameContainer: {
     flex: 1,
   },

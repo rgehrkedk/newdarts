@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { PlayerList } from './drawer/PlayerList';
 import { PlayerForm } from './drawer/PlayerForm';
-import { PlayerStats } from './drawer/PlayerStats';
+import { PlayerStatsContent } from '@/components/stats/PlayerStats';
 
 interface PlayerDrawerProps {
   visible: boolean;
@@ -159,7 +159,7 @@ export function PlayerDrawer({
       case 'edit':
         return 'Edit Player';
       case 'stats':
-        return 'Player Statistics';
+        return 'Player Profile';
       default:
         return 'Select Player';
     }
@@ -174,6 +174,7 @@ export function PlayerDrawer({
         icon={Users}
         onBack={handleBack}
         showBack={navigationStack.length > 1}
+        fullHeight={step === 'stats'}
       >
         <View style={styles.content}>
           {step === 'list' && (
@@ -217,7 +218,9 @@ export function PlayerDrawer({
           )}
 
           {step === 'stats' && selectedPlayerStats && (
-            <PlayerStats player={selectedPlayerStats} />
+            <View style={styles.statsContainer}>
+              <PlayerStatsContent player={selectedPlayerStats} />
+            </View>
           )}
         </View>
       </Drawer>
@@ -236,5 +239,12 @@ export function PlayerDrawer({
 const styles = StyleSheet.create({
   content: {
     gap: spacing.md,
+    flex: 1,
+  },
+  statsContainer: {
+    flex: 1,
+    marginHorizontal: -spacing.md, // Remove horizontal padding to match the tabs design
+
+
   },
 });

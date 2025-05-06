@@ -26,6 +26,7 @@ interface DrawerProps {
   onBack?: () => void;
   showBack?: boolean;
   headerContent?: React.ReactNode;
+  fullHeight?: boolean;
 }
 
 export function Drawer({ 
@@ -36,7 +37,8 @@ export function Drawer({
   children,
   onBack,
   showBack,
-  headerContent
+  headerContent,
+  fullHeight = false
 }: DrawerProps) {
   const colors = useThemeColors();
   const translateY = useSharedValue(0);
@@ -108,7 +110,7 @@ export function Drawer({
                 <X size={24} color={colors.text.primary} />
               </TouchableOpacity>
             </View>
-            <View style={styles.content}>
+            <View style={[styles.content, fullHeight && styles.fullHeightContent]}>
               {children}
             </View>
           </Animated.View>
@@ -156,5 +158,9 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: spacing.lg,
+  },
+  fullHeightContent: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 0,
   },
 });

@@ -2,10 +2,11 @@ import { View, StyleSheet } from 'react-native';
 import { spacing } from '@/constants/theme';
 import { useThemeColors } from '@/constants/theme/colors';
 import { Text } from '@/components/ui/atoms/Text';
-import { Card } from '@/components/ui/atoms/Card';
 import { ArrowUp, ArrowDown, Minus } from 'lucide-react-native';
 import { SavedPlayer } from '@/types/game';
 import { usePlayerTrends } from '@/hooks/usePlayerTrends';
+import { Period } from './PeriodFilter';
+import { GradientCard } from '@/components/ui/molecules/GradientCard';
 
 interface StatCardProps {
   title: string;
@@ -14,9 +15,10 @@ interface StatCardProps {
   trend?: 'up' | 'down' | 'stable';
   trendLabel?: string;
   percentChange?: number | null;
+  animationDelay?: number; // Animation delay for staggered appearance
 }
 
-function StatCard({ title, value, suffix, trend, trendLabel, percentChange }: StatCardProps) {
+function StatCard({ title, value, suffix, trend, trendLabel, percentChange, animationDelay = 0 }: StatCardProps) {
   const colors = useThemeColors();
 
   const getTrendColor = () => {
@@ -26,11 +28,24 @@ function StatCard({ title, value, suffix, trend, trendLabel, percentChange }: St
       default: return colors.text.secondary;
     }
   };
+  
+  // Generate gradient colors based on trend
+  const getGradientColors = () => {
+    switch (trend) {
+      case 'up':
+        return [colors.brand.primary, colors.brand.primaryGradient];
+      case 'down':
+        return [colors.brand.error, '#DC2626']; // Darker red gradient
+      default:
+        return [colors.text.secondary, colors.text.secondary + '80']; // Less saturated for stable
+    }
+  };
 
   const TrendIcon = trend === 'up' ? ArrowUp : trend === 'down' ? ArrowDown : Minus;
-
-  return (
-    <Card variant="secondary" style={styles.statCard}>
+  
+  // Card content to display
+  const StatCardContent = () => (
+    <View style={styles.statCardContent}>
       <Text variant="secondary" size="xs">{title}</Text>
       <View style={styles.valueContainer}>
         <Text size="xxl" weight="semibold">{value}</Text>
@@ -47,16 +62,32 @@ function StatCard({ title, value, suffix, trend, trendLabel, percentChange }: St
           </Text>
         </View>
       )}
-    </Card>
+    </View>
+  );
+
+  return (
+    <GradientCard
+      gradientColors={getGradientColors()}
+      style={styles.statCard}
+      clean={false}
+      height={120}
+      innerTransparency={colors.transparency.high} // 90% opacity for better readability
+      outerTransparency={colors.transparency.faint} // 40% opacity for a subtler gradient effect
+      contentAlignment="flex-start"
+      animationDelay={animationDelay}
+    >
+      <StatCardContent />
+    </GradientCard>
   );
 }
 
 interface PerformanceSummaryProps {
   player: SavedPlayer;
+  period?: Period;
 }
 
-export function PerformanceSummary({ player }: PerformanceSummaryProps) {
-  const { gameAverageTrend, checkoutTrend, winRateTrend } = usePlayerTrends(player);
+export function PerformanceSummary({ player, period }: PerformanceSummaryProps) {
+  const { gameAverageTrend, checkoutTrend, winRateTrend } = usePlayerTrends(player, period);
   
   const getWinRateLabel = (trend: 'up' | 'down' | 'stable', winRate: number) => {
     if (winRate >= 60) return 'Excellent';
@@ -71,21 +102,23 @@ export function PerformanceSummary({ player }: PerformanceSummaryProps) {
       <View style={styles.grid}>
         <StatCard
           title="Game Average"
-          value={player.gameAvg.toFixed(1)}
+          value={(player.gameAvg || 0).toFixed(1)}
           suffix="pts"
           trend={gameAverageTrend.trend}
           trendLabel={gameAverageTrend.trend === 'up' ? 'Improving' : 
                      gameAverageTrend.trend === 'down' ? 'Declining' : 'Stable'}
           percentChange={gameAverageTrend.percentChange}
+          animationDelay={0}
         />
         <StatCard
           title="Checkout %"
-          value={player.checkoutPercentage.toFixed(1)}
+          value={(player.checkoutPercentage || 0).toFixed(1)}
           suffix="%"
           trend={checkoutTrend.trend}
           trendLabel={checkoutTrend.trend === 'up' ? 'Improving' : 
                     checkoutTrend.trend === 'down' ? 'Declining' : 'Stable'}
           percentChange={checkoutTrend.percentChange}
+          animationDelay={100}
         />
         <StatCard
           title="Win Rate"
@@ -94,12 +127,14 @@ export function PerformanceSummary({ player }: PerformanceSummaryProps) {
           trend={winRateTrend.trend}
           trendLabel={getWinRateLabel(winRateTrend.trend, player.winRate || 0)}
           percentChange={winRateTrend.percentChange}
+          animationDelay={200}
         />
         <StatCard
           title="Games Played"
           value={player.gamesPlayed || 0}
           trend="stable"
           trendLabel={`Won: ${player.gamesWon || 0}`}
+          animationDelay={300}
         />
       </View>
     </View>
@@ -118,6 +153,9 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     minWidth: '45%',
+  },
+  statCardContent: {
+    flex: 1,
   },
   valueContainer: {
     flexDirection: 'row',

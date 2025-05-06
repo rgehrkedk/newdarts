@@ -5,6 +5,7 @@ import { Text } from '@/components/ui/atoms/Text';
 import { Card } from '@/components/ui/atoms/Card';
 import { Award } from 'lucide-react-native';
 import { SavedPlayer } from '@/types/game';
+import { Period } from './PeriodFilter';
 
 interface ScoreBarProps {
   label: string;
@@ -35,9 +36,10 @@ function ScoreBar({ label, value, color, total }: ScoreBarProps) {
 
 interface HighScoresProps {
   player: SavedPlayer;
+  period?: Period;
 }
 
-export function HighScores({ player }: HighScoresProps) {
+export function HighScores({ player, period }: HighScoresProps) {
   const colors = useThemeColors();
   
   const totalScores = (player.totalSixtyPlus || 0) + 

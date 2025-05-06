@@ -1,18 +1,120 @@
-import { View, StyleSheet } from 'react-native';
-import { spacing } from '@/constants/theme';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { spacing, layout } from '@/constants/theme';
 import { Text } from '@/components/ui/atoms/Text';
 import { StatItem } from '../ui/atoms/StatItem';
 import { Trophy, Target, Award, Crown, Hash, Percent, Zap, TrendingUp, Timer, BarChart as BarChart3 } from 'lucide-react-native';
 import { useThemeColors } from '@/constants/theme/colors';
-import { Player } from '@/types/game';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import { SavedPlayer } from '@/types/game';
+import { FadeIn } from 'react-native-reanimated';
+import { useState } from 'react';
+import { PerformanceSummary } from './components/PerformanceSummary';
+import { TrendChart } from './components/TrendChart';
+import { Highlights } from './components/Highlights';
+import { HighScores } from './components/HighScores';
+import { GameHistoryList } from './components/GameHistoryList';
+import { Period } from './components/PeriodFilter';
+import { StickyHeader } from './components/StickyHeader';
 
-interface PlayerStatsProps {
-  player: Player;
+interface PlayerStatsContentProps {
+  player: SavedPlayer;
+}
+
+type Tab = 'Overview' | 'History' | 'Achievements';
+
+// Main component containing all player stats content with tabs
+export function PlayerStatsContent({ player }: PlayerStatsContentProps) {
+  const colors = useThemeColors();
+  const [activeTab, setActiveTab] = useState<Tab>('Overview');
+  const [period, setPeriod] = useState<Period>('7d');
+  const [isHeaderSticky, setIsHeaderSticky] = useState(false);
+  
+  const tabs: Tab[] = ['Overview', 'History', 'Achievements'];
+  const themedStyles = styles(colors);
+
+  return (
+    <View style={{ flex: 1 }}>
+      <View style={[themedStyles.tabs, { borderBottomColor: colors.border.primary }]}>
+        {tabs.map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            style={[
+              themedStyles.tab,
+              activeTab === tab && { borderBottomColor: colors.brand.primary }
+            ]}
+            onPress={() => setActiveTab(tab)}
+          >
+            <Text
+              weight={activeTab === tab ? 'semibold' : 'regular'}
+              variant={activeTab === tab ? 'primary' : 'secondary'}
+            >
+              {tab}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      
+      <View style={themedStyles.content}>
+        {activeTab === 'Overview' && (
+          <View style={{ flex: 1, position: 'relative' }}>
+            {/* Fixed position sticky header that appears when scrolling */}
+            {isHeaderSticky && (
+              <View style={themedStyles.stickyContainer}>
+                <StickyHeader
+                  player={player}
+                  period={period}
+                  onPeriodChange={setPeriod}
+                  isSticky={true}
+                />
+              </View>
+            )}
+            
+            <ScrollView 
+              style={themedStyles.overview}
+              contentContainerStyle={themedStyles.overviewContent}
+              scrollEventThrottle={16} // For smooth scroll event handling
+              onScroll={(event) => {
+                const y = event.nativeEvent.contentOffset.y;
+                // Use a threshold for when to show the sticky header
+                setIsHeaderSticky(y > 120); 
+              }}
+            >
+              {/* Regular header that's part of scroll content */}
+              <StickyHeader
+                player={player}
+                period={period}
+                onPeriodChange={setPeriod}
+                isSticky={false}
+              />
+              
+              <PerformanceSummary player={player} period={period} />
+              <TrendChart player={player} period={period} />
+              <Highlights player={player} period={period} />
+              <HighScores player={player} period={period} />
+            </ScrollView>
+          </View>
+        )}
+        
+        {activeTab === 'History' && (
+          <GameHistoryList player={player} />
+        )}
+        
+        {activeTab === 'Achievements' && (
+          <View style={themedStyles.comingSoon}>
+            <Text variant="secondary" align="center">Achievements coming soon</Text>
+          </View>
+        )}
+      </View>
+    </View>
+  );
+}
+
+// Legacy component - keeping for backwards compatibility
+interface PlayerStatsLegacyProps {
+  player: any; // Using any to allow for different player types
   showHeader?: boolean;
 }
 
-export function PlayerStats({ player, showHeader = true }: PlayerStatsProps) {
+export function PlayerStats({ player, showHeader = true }: PlayerStatsLegacyProps) {
   const colors = useThemeColors();
 
   const StatGroup = ({ title, children }: { title: string; children: React.ReactNode }) => (
@@ -46,7 +148,7 @@ export function PlayerStats({ player, showHeader = true }: PlayerStatsProps) {
             <StatItem
               icon={Trophy}
               label="Game Avg"
-              value={player.gameAvg.toFixed(1) || '0.0'}
+              value={player.gameAvg?.toFixed(1) || '0.0'}
               color={colors.brand.success}
             />
             <StatItem
@@ -77,13 +179,13 @@ export function PlayerStats({ player, showHeader = true }: PlayerStatsProps) {
             <StatItem
               icon={Percent}
               label="Win Rate"
-              value={`${player.winRate?.toFixed(1)}%`}
+              value={`${player.winRate?.toFixed(1) || 0}%`}
               color={colors.brand.primary}
             />
             <StatItem
               icon={Hash}
               label="Games Won"
-              value={`${player.gamesWon}/${player.gamesPlayed}`}
+              value={`${player.gamesWon || 0}/${player.gamesPlayed || 0}`}
               color={colors.brand.primary}
             />
           </View>
@@ -91,7 +193,7 @@ export function PlayerStats({ player, showHeader = true }: PlayerStatsProps) {
             <StatItem
               icon={Target}
               label="Checkout %"
-              value={`${player.checkoutPercentage.toFixed(1)}%`}
+              value={`${player.checkoutPercentage?.toFixed(1) || 0}%`}
               color={colors.brand.primary}
             />
           </View>
@@ -103,13 +205,13 @@ export function PlayerStats({ player, showHeader = true }: PlayerStatsProps) {
               icon={BarChart3}
               label="60+"
               value={player.totalSixtyPlus?.toString() || '0'}
-              color={colors.avatar.orange}
+              color={colors.avatar.colors.orange}
             />
             <StatItem
               icon={BarChart3}
               label="80+"
               value={player.totalEightyPlus?.toString() || '0'}
-              color={colors.avatar.orange}
+              color={colors.avatar.colors.orange}
             />
           </View>
           <View style={styles.statsRow}>
@@ -117,13 +219,13 @@ export function PlayerStats({ player, showHeader = true }: PlayerStatsProps) {
               icon={BarChart3}
               label="100+"
               value={player.totalTonPlus?.toString() || '0'}
-              color={colors.avatar.orange}
+              color={colors.avatar.colors.orange}
             />
             <StatItem
               icon={Zap}
               label="180s"
               value={player.totalOneEighties?.toString() || '0'}
-              color={colors.avatar.orange}
+              color={colors.avatar.colors.orange}
             />
           </View>
         </StatGroup>
@@ -132,7 +234,7 @@ export function PlayerStats({ player, showHeader = true }: PlayerStatsProps) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = (colors = useThemeColors()) => StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -150,19 +252,60 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   statsGrid: {
-    gap: spacing.xl,
+    gap: spacing.xxxl, // Increased from xxl to xxxl
   },
   statGroup: {
-    gap: spacing.md,
+    gap: spacing.lg, // Increased from md to lg
   },
   groupTitle: {
-    marginBottom: spacing.xs,
+    marginBottom: spacing.sm, // Increased from xs to sm
   },
   groupContent: {
-    gap: spacing.md,
+    gap: spacing.lg, // Increased from md to lg
   },
   statsRow: {
     flexDirection: 'row',
-    gap: spacing.md,
+    gap: spacing.lg, // Increased from md to lg
+  },
+  // Tab styles
+  tabs: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  content: {
+    flex: 1,
+    gap: spacing.xxxl,
+  },
+  overview: {
+    padding: spacing.lg,
+    flex: 1,
+  },
+  overviewContent: {
+    gap: spacing.xxxl,
+    paddingBottom: spacing.xxxl,
+    paddingTop: 0, // We want the StickyHeader to appear right at the top
+  },
+  comingSoon: {
+    flex: 1,
+    padding: spacing.xxxl,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  // Sticky container style for the fixed header
+  stickyContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    backgroundColor: 'transparent',
   },
 });

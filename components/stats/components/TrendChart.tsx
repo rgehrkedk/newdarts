@@ -1,27 +1,118 @@
-import { View, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
-import { spacing } from '@/constants/theme';
+import { View, StyleSheet, Dimensions, ActivityIndicator, TouchableOpacity, Modal } from 'react-native';
+import { spacing, layout } from '@/constants/theme';
 import { useThemeColors } from '@/constants/theme/colors';
 import { Text } from '@/components/ui/atoms/Text';
 import { Card } from '@/components/ui/atoms/Card';
 import { SegmentedControl } from '@/components/ui/molecules/SegmentedControl';
 import { useState } from 'react';
 import { SavedPlayer } from '@/types/game';
-import { ArrowUp, ArrowDown, Minus } from 'lucide-react-native';
-import { StatType, Period, usePlayerTrends } from '@/hooks/usePlayerTrends';
+import { ArrowUp, ArrowDown, Minus, ChevronDown } from 'lucide-react-native';
+import { StatType, usePlayerTrends } from '@/hooks/usePlayerTrends';
+import { Period } from './PeriodFilter';
 import Svg, { Path, Line, Circle, Text as SvgText } from 'react-native-svg';
 
 interface TrendChartProps {
   player: SavedPlayer;
+  period: Period;
 }
 
-export function TrendChart({ player }: TrendChartProps) {
+interface StatTypeOption {
+  label: string;
+  value: StatType;
+}
+
+function StatTypeDropdown({ 
+  value, 
+  onChange, 
+  options 
+}: { 
+  value: StatType; 
+  onChange: (value: StatType) => void; 
+  options: StatTypeOption[];
+}) {
   const colors = useThemeColors();
-  const [period, setPeriod] = useState<Period>('7d');
+  const [modalVisible, setModalVisible] = useState(false);
+  
+  const selectedOption = options.find(option => option.value === value);
+  
+  return (
+    <>
+      <TouchableOpacity 
+        onPress={() => setModalVisible(true)}
+        style={[
+          styles.dropdownButton,
+          { 
+            backgroundColor: colors.background.tertiary,
+            borderColor: colors.border.primary
+          }
+        ]}
+      >
+        <Text variant="primary">{selectedOption?.label}</Text>
+        <ChevronDown size={16} color={colors.text.primary} />
+      </TouchableOpacity>
+      
+      <Modal
+        transparent
+        visible={modalVisible}
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <TouchableOpacity 
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setModalVisible(false)}
+        >
+          <View 
+            style={[
+              styles.modalContent,
+              {
+                backgroundColor: colors.background.primary,
+                borderColor: colors.border.primary,
+              }
+            ]}
+          >
+            {options.map(option => (
+              <TouchableOpacity
+                key={option.value}
+                style={[
+                  styles.optionItem,
+                  option.value === value && { 
+                    backgroundColor: `${colors.brand.primary}15`
+                  }
+                ]}
+                onPress={() => {
+                  onChange(option.value);
+                  setModalVisible(false);
+                }}
+              >
+                <Text 
+                  variant={option.value === value ? "primary" : "secondary"}
+                  weight={option.value === value ? "semibold" : "regular"}
+                >
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    </>
+  );
+}
+
+export function TrendChart({ player, period }: TrendChartProps) {
+  const colors = useThemeColors();
   const [statType, setStatType] = useState<StatType>('gameAverage');
-  const { loading, getTrendForType, refreshData } = usePlayerTrends(player);
+  const { loading, getTrendForType } = usePlayerTrends(player, period);
   
   const trendData = getTrendForType(statType);
   const dataPoints = trendData.dataPoints;
+  
+  const statTypeOptions: StatTypeOption[] = [
+    { label: 'Game Average', value: 'gameAverage' },
+    { label: 'Checkout %', value: 'checkoutPercent' },
+    { label: 'Win Rate', value: 'winRate' },
+  ];
 
   const getStatLabel = () => {
     switch (statType) {
@@ -39,12 +130,6 @@ export function TrendChart({ player }: TrendChartProps) {
       case 'winRate': return '%';
       default: return '';
     }
-  };
-
-  const handlePeriodChange = (value: string) => {
-    const newPeriod = value as Period;
-    setPeriod(newPeriod);
-    refreshData(newPeriod);
   };
 
   const handleStatTypeChange = (value: string) => {
@@ -217,25 +302,14 @@ export function TrendChart({ player }: TrendChartProps) {
       <Text size="lg" weight="semibold" style={styles.title}>Performance Trend</Text>
       
       <View style={styles.controls}>
-        <SegmentedControl
-          options={[
-            { label: '7 Days', value: '7d' },
-            { label: '30 Days', value: '30d' },
-            { label: 'All Time', value: 'all' },
-          ]}
-          value={period}
-          onChange={handlePeriodChange}
-        />
-
-        <SegmentedControl
-          options={[
-            { label: 'Game Average', value: 'gameAverage' },
-            { label: 'Checkout %', value: 'checkoutPercent' },
-            { label: 'Win Rate', value: 'winRate' },
-          ]}
-          value={statType}
-          onChange={handleStatTypeChange}
-        />
+        <View style={styles.statTypeSelector}>
+          <Text variant="secondary" size="sm">Statistic:</Text>
+          <StatTypeDropdown 
+            value={statType}
+            onChange={(value) => handleStatTypeChange(value)}
+            options={statTypeOptions}
+          />
+        </View>
       </View>
 
       <Card variant="secondary">
@@ -277,6 +351,39 @@ const styles = StyleSheet.create({
   controls: {
     gap: spacing.md,
     marginBottom: spacing.md,
+  },
+  statTypeSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.sm,
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: layout.radius.md,
+    borderWidth: 1,
+    minWidth: 150,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '80%',
+    borderRadius: layout.radius.lg,
+    padding: spacing.md,
+    borderWidth: 1,
+  },
+  optionItem: {
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderRadius: layout.radius.md,
   },
   chartHeader: {
     flexDirection: 'row',
