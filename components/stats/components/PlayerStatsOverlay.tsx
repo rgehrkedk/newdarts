@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, useWindowDimensions, BackHandler } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, useWindowDimensions, BackHandler, StatusBar, Platform } from 'react-native';
 import { spacing, layout } from '@/constants/theme';
 import { useThemeColors } from '@/constants/theme/colors';
 import { Avatar } from '@/components/ui/atoms/Avatar';
 import { Text } from '@/components/ui/atoms/Text';
 import { SavedPlayer } from '@/types/game';
-import { ChevronLeft, MoreVertical } from 'lucide-react-native';
+import { ChevronLeft, X } from 'lucide-react-native';
 import { IconButton } from '@/components/ui/atoms/IconButton';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -40,6 +41,7 @@ export function PlayerStatsOverlay({
 }: PlayerStatsOverlayProps) {
   const colors = useThemeColors();
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   // Animation values
   const progress = useSharedValue(0);
@@ -78,6 +80,24 @@ export function PlayerStatsOverlay({
       });
     }
   }, [isVisible, progress, contentOpacity]);
+  
+  // Handle status bar appearance
+  useEffect(() => {
+    if (isVisible) {
+      StatusBar.setBarStyle('light-content');
+      if (Platform.OS === 'android') {
+        StatusBar.setBackgroundColor('transparent');
+        StatusBar.setTranslucent(true);
+      }
+    }
+    
+    return () => {
+      StatusBar.setBarStyle('default');
+      if (Platform.OS === 'android') {
+        StatusBar.setTranslucent(false);
+      }
+    };
+  }, [isVisible]);
 
   // Background overlay style
   const overlayStyle = useAnimatedStyle(() => {
@@ -103,7 +123,7 @@ export function PlayerStatsOverlay({
     };
   });
 
-  // Modal container style (for the card that animates from leaderboard item)
+  // Modal container style (for the card that animates from leaderboard item to full screen)
   const modalStyle = useAnimatedStyle(() => {
     if (!itemPosition || !player) return {};
 
@@ -113,11 +133,11 @@ export function PlayerStatsOverlay({
     const initialWidth = itemPosition.width;
     const initialHeight = itemPosition.height;
 
-    // Target position (full modal)
-    const targetX = SCREEN_WIDTH * 0.05;
-    const targetY = SCREEN_HEIGHT * 0.1;
-    const targetWidth = SCREEN_WIDTH * 0.9;
-    const targetHeight = SCREEN_HEIGHT * 0.8;
+    // Target position (full screen)
+    const targetX = 0;
+    const targetY = 0;
+    const targetWidth = SCREEN_WIDTH;
+    const targetHeight = SCREEN_HEIGHT;
 
     return {
       position: 'absolute',
@@ -148,7 +168,7 @@ export function PlayerStatsOverlay({
       borderRadius: interpolate(
         progress.value,
         [0, 1],
-        [layout.radius.lg, layout.radius.xl],
+        [layout.radius.lg, 0], // No border radius when full screen
         Extrapolate.CLAMP
       ),
       opacity: 1,
@@ -186,7 +206,13 @@ export function PlayerStatsOverlay({
         [spacing.md, spacing.xl],
         Extrapolate.CLAMP
       ),
-      paddingVertical: interpolate(
+      paddingTop: interpolate(
+        progress.value,
+        [0, 1],
+        [spacing.md, insets.top + spacing.md], // Respect safe area top inset
+        Extrapolate.CLAMP
+      ),
+      paddingBottom: interpolate(
         progress.value,
         [0, 1],
         [spacing.md, spacing.lg],
