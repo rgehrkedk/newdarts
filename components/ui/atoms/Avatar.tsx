@@ -143,15 +143,17 @@ export function Avatar({
           end={{ x: 1, y: 1 }}
           style={styles.gradient}
         >
-          {sharedTransitionTag ? (
-            <TextComponent {...textProps}>
-              {getInitials()}
-            </TextComponent>
-          ) : (
-            <Text {...textProps}>
-              {getInitials()}
-            </Text>
-          )}
+          <View style={styles.textContainer}>
+            {sharedTransitionTag ? (
+              <TextComponent {...textProps}>
+                {getInitials()}
+              </TextComponent>
+            ) : (
+              <Text {...textProps}>
+                {getInitials()}
+              </Text>
+            )}
+          </View>
         </LinearGradient>
       </Container>
     );
@@ -163,15 +165,17 @@ export function Avatar({
       style={[dynamicStyles.container, { backgroundColor: color }, style]}
       {...containerProps}
     >
-      {sharedTransitionTag ? (
-        <TextComponent {...textProps}>
-          {getInitials()}
-        </TextComponent>
-      ) : (
-        <Text {...textProps}>
-          {getInitials()}
-        </Text>
-      )}
+      <View style={styles.textContainer}>
+        {sharedTransitionTag ? (
+          <TextComponent {...textProps}>
+            {getInitials()}
+          </TextComponent>
+        ) : (
+          <Text {...textProps}>
+            {getInitials()}
+          </Text>
+        )}
+      </View>
     </Container>
   );
 }
@@ -183,5 +187,12 @@ const styles = StyleSheet.create({
     borderRadius: 999, // Large value to ensure it's always rounded
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  textContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
   },
 });

@@ -249,8 +249,6 @@ export function PlayerStatsOverlay({
           <View style={styles.headerContent}>
             {/* This part transitions from LeaderboardItem */}
             <View style={styles.avatarSection}>
-
-
               <Avatar
                 name={player.name}
                 color={player.color}
@@ -280,8 +278,16 @@ export function PlayerStatsOverlay({
               </View>
             </View>
 
-            {/* This part is only visible when fully expanded */}
-
+            {/* Close button - always visible */}
+            <Animated.View style={styles.closeButtonContainer}>
+              <IconButton
+                icon={X}
+                onPress={onClose}
+                variant="transparent"
+                size={24}
+                style={styles.closeButton}
+              />
+            </Animated.View>
           </View>
         </Animated.View>
 
@@ -344,6 +350,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
+  },
+  closeButtonContainer: {
+    zIndex: 1010, // Ensure it's above all other content
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeButton: {
+    backgroundColor: 'transparent',
   },
   content: {
     flex: 1,
