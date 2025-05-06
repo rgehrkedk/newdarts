@@ -1,4 +1,5 @@
 // components/ui/molecules/LeaderboardItem.tsx
+import React, { useRef } from 'react';
 import { TouchableOpacity, StyleSheet, View } from 'react-native';
 import { spacing, layout } from '@/constants/theme';
 import { useThemeColors } from '@/constants/theme/colors';
@@ -10,7 +11,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 interface LeaderboardItemProps {
   player: SavedPlayer;
   index: number;
-  onPress?: () => void;
+  onPress?: (player: SavedPlayer, position: { x: number, y: number, width: number, height: number }) => void;
   sortBy: SortCategory;
 }
 
@@ -21,6 +22,7 @@ export function LeaderboardItem({
   sortBy 
 }: LeaderboardItemProps) {
   const colors = useThemeColors();
+  const cardRef = useRef<View>(null);
 
   // Get display value based on sort category
   const getStatValue = (): string => {
@@ -70,17 +72,42 @@ export function LeaderboardItem({
     }
   };
 
+  // Add rank to player for display in overlay
+  const enhancedPlayer = {
+    ...player,
+    rank: index + 1,
+  };
+
+  const handlePress = () => {
+    if (onPress && cardRef.current) {
+      // Measure the card's position and dimensions
+      cardRef.current.measure((x, y, width, height, pageX, pageY) => {
+        // Pass measurements to parent component
+        onPress(enhancedPlayer, {
+          x: pageX,
+          y: pageY,
+          width,
+          height
+        });
+      });
+    }
+  };
+
   return (
     <Animated.View entering={FadeIn.delay(index * 100)}>
       <TouchableOpacity
-        onPress={onPress}
+        ref={cardRef}
+        onPress={handlePress}
         style={[styles.container, { backgroundColor: colors.background.card.primary }]}
       >
         <View style={styles.rankAndContent}>
-          <View style={[
-            styles.rankContainer, 
-            { backgroundColor: index < 3 ? `${player.color}30` : 'transparent' }
-          ]}>
+          <Animated.View 
+            style={[
+              styles.rankContainer, 
+              { backgroundColor: index < 3 ? `${player.color}30` : 'transparent' }
+            ]}
+            sharedTransitionTag={`rank-${player.id}`}
+          >
             <Text 
               weight="semibold" 
               size="lg" 
@@ -91,7 +118,7 @@ export function LeaderboardItem({
             >
               {index + 1}
             </Text>
-          </View>
+          </Animated.View>
 
           <View style={styles.content}>
             <Avatar

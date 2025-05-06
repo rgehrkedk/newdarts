@@ -1,4 +1,4 @@
-import { View, StyleSheet, ScrollView, FlatList } from 'react-native';
+import { View, StyleSheet, FlatList } from 'react-native';
 import { spacing, layout } from '@/constants/theme';
 import { useThemeColors } from '@/constants/theme/colors';
 import { Text } from '@/components/ui/atoms/Text';
@@ -6,7 +6,7 @@ import { usePlayers } from '@/hooks/usePlayers';
 import { LeaderboardItem } from '@/components/ui/molecules/LeaderboardItem';
 import { useState, useCallback, useMemo } from 'react';
 import { SavedPlayer, SortCategory } from '@/types/game';
-import { PlayerStatsModal } from '@/components/stats/PlayerStatsModal';
+import { PlayerStatsOverlay } from '@/components/stats/components/PlayerStatsOverlay';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { SortDropdown } from '@/components/ui/molecules/SortDropdown';
 import { DateFilter, DateRange } from '@/components/ui/molecules/DateFilter';
@@ -16,15 +16,19 @@ export default function Leaderboard() {
   const colors = useThemeColors();
   const { players, isLoading, error } = usePlayers();
   const [selectedPlayer, setSelectedPlayer] = useState<SavedPlayer | null>(null);
-  const [statsModalVisible, setStatsModalVisible] = useState(false);
+  const [statsOverlayVisible, setStatsOverlayVisible] = useState(false);
+  const [itemPosition, setItemPosition] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
   const [sortBy, setSortBy] = useState<SortCategory>('average');
   const [dateRange, setDateRange] = useState<DateRange>('all');
   const [customDateRange, setCustomDateRange] = useState<CustomDateRange>({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
     endDate: new Date() // Today
   });
-  
-  // No longer need scroll animation state
   
   // Filter players based on date range
   const filteredPlayers = useMemo(() => {
@@ -86,22 +90,34 @@ export default function Leaderboard() {
     });
   }, [filteredPlayers, sortBy]);
 
-  const handlePlayerPress = useCallback((player: SavedPlayer) => {
+  const handlePlayerPress = useCallback((player: SavedPlayer, position: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }) => {
     setSelectedPlayer(player);
-    setStatsModalVisible(true);
+    setItemPosition(position);
+    setStatsOverlayVisible(true);
   }, []);
 
   const handleCustomRangeChange = useCallback((range: CustomDateRange) => {
     setCustomDateRange(range);
   }, []);
 
+  const handleCloseOverlay = useCallback(() => {
+    setStatsOverlayVisible(false);
+    
+    // Clear data after animation completes
+    setTimeout(() => {
+      setSelectedPlayer(null);
+      setItemPosition(null);
+    }, 500);
+  }, []);
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
       <View style={{ height: 90 }} />
-      
-      {/* We've removed the sticky header since we're simplifying the DateFilter component */}
-      
-
       
       <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.filtersContainer}>
         {/* Date range filter */}
@@ -151,26 +167,24 @@ export default function Leaderboard() {
             data={sortedPlayers}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.listContent}
-            // No longer need scroll animation
             renderItem={({ item, index }) => (
               <LeaderboardItem
                 player={item}
                 index={index}
                 sortBy={sortBy}
-                onPress={() => handlePlayerPress(item)}
+                onPress={handlePlayerPress}
               />
             )}
           />
         </Animated.View>
       )}
 
-      <PlayerStatsModal
-        visible={statsModalVisible}
-        onClose={() => {
-          setStatsModalVisible(false);
-          setSelectedPlayer(null);
-        }}
+      {/* Shared element overlay */}
+      <PlayerStatsOverlay
         player={selectedPlayer}
+        isVisible={statsOverlayVisible}
+        onClose={handleCloseOverlay}
+        itemPosition={itemPosition}
       />
     </View>
   );
