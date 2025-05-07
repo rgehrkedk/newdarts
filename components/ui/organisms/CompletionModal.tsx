@@ -91,7 +91,10 @@ export function CompletionModal({
       transparent
       animationType="fade"
     >
-      <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
+      <View style={[styles.container, { 
+        backgroundColor: colors.background.primary,
+        paddingTop: Platform.OS === 'ios' ? 50 : 0
+      }]}>
         <ScrollView style={styles.scrollView}>
           <Animated.View 
             entering={FadeIn}
@@ -143,7 +146,13 @@ export function CompletionModal({
         {showActions && (
           <Animated.View 
             entering={FadeIn.delay(600)}
-            style={[styles.actions, { backgroundColor: colors.background.primary }]}
+            style={[
+              styles.actions, 
+              { 
+                backgroundColor: colors.background.primary,
+                borderTopColor: colors.border.primary + '40'
+              }
+            ]}
           >
             <View style={styles.actionButtons}>
               {onRestart && (
@@ -151,7 +160,7 @@ export function CompletionModal({
                   label="Play Again"
                   variant="secondary"
                   onPress={onRestart}
-                  style={styles.actionButton}
+                  style={[styles.actionButton, { paddingVertical: spacing.md }]}
                 />
               )}
               {onHome && (
@@ -159,7 +168,7 @@ export function CompletionModal({
                   label="Home"
                   variant="primary"
                   onPress={onHome}
-                  style={styles.actionButton}
+                  style={[styles.actionButton, { paddingVertical: spacing.md }]}
                 />
               )}
               {onContinue && (
@@ -167,7 +176,7 @@ export function CompletionModal({
                   label="Continue"
                   variant="primary"
                   onPress={onContinue}
-                  style={styles.actionButton}
+                  style={[styles.actionButton, { paddingVertical: spacing.md }]}
                 />
               )}
             </View>
@@ -186,7 +195,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingTop: Platform.OS === 'ios' ? spacing.xxxl : spacing.xxl,
+    paddingTop: Platform.OS === 'ios' ? spacing.xxxl + spacing.md : spacing.xxl,
     paddingBottom: spacing.lg,
     paddingHorizontal: spacing.container,
   },
@@ -217,8 +226,14 @@ const styles = StyleSheet.create({
   actions: {
     padding: spacing.container,
     paddingTop: spacing.lg,
+    paddingBottom: Platform.OS === 'ios' ? spacing.xl : spacing.lg,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 5,
   },
   actionButtons: {
     flexDirection: 'row',
@@ -226,5 +241,6 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
+    minHeight: 48,
   },
 });

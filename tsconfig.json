@@ -3,7 +3,11 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@components/*": ["components/*"],
+      "@core/*": ["components/core/*"],
+      "@features/*": ["components/features/*"],
+      "@layout/*": ["components/layout/*"]
     }
   },
   "include": [
