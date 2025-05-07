@@ -1,16 +1,16 @@
 import { View, StyleSheet, FlatList } from 'react-native';
 import { spacing, layout } from '@/constants/theme';
 import { useThemeColors } from '@/constants/theme/colors';
-import { Text } from '@/components/ui/atoms/Text';
+import { Text } from '@core/atoms/Text';
 import { usePlayers } from '@/hooks/usePlayers';
-import { LeaderboardItem } from '@/components/ui/molecules/LeaderboardItem';
+import { LeaderboardItem } from '@core/molecules/LeaderboardItem';
 import { useState, useCallback, useMemo } from 'react';
 import { SavedPlayer, SortCategory } from '@/types/game';
-import { PlayerStatsOverlay } from '@/components/stats/components/PlayerStatsOverlay';
+import { PlayerStatsOverlay } from '@features/stats/components/PlayerStatsOverlay';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { SortDropdown } from '@/components/ui/molecules/SortDropdown';
-import { DateFilter, DateRange } from '@/components/ui/molecules/DateFilter';
-import { CustomDateRange } from '@/components/ui/molecules/DateRangePicker';
+import { SortDropdown } from '@core/molecules/SortDropdown';
+import { DateFilter, DateRange } from '@core/molecules/DateFilter';
+import { CustomDateRange } from '@core/molecules/DateRangePicker';
 
 export default function Leaderboard() {
   const colors = useThemeColors();

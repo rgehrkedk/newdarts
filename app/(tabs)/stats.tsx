@@ -2,9 +2,9 @@
 import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { spacing, layout } from '@/constants/theme';
 import { useThemeColors } from '@/constants/theme/colors';
-import { Text } from '@/components/ui/atoms/Text';
+import { Text } from '@core/atoms/Text';
 import { usePlayers } from '@/hooks/usePlayers';
-import { PlayerStatsContent } from '@/components/stats/PlayerStats';
+import { PlayerStatsContent } from '@features/stats/PlayerStats';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';

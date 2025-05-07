@@ -4,7 +4,7 @@ import { useThemeColors } from '@/constants/theme/colors';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'expo-router';
-import { Text } from '@/components/ui/atoms/Text';
+import { Text } from '@core/atoms/Text';
 import { Moon, Bell, Volume2, Gamepad2, Users, CircleHelp as HelpCircle, Info, LogOut, UserX, ChevronRight } from 'lucide-react-native';
 import Constants from 'expo-constants';
 

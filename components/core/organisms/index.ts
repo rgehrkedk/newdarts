@@ -3,4 +3,5 @@
 
 export * from './BaseModal';
 export * from './CompletionModal';
+export * from './BasicLoadingScreen';
 // export * from './LoadingScreen';

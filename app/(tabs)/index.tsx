@@ -1,18 +1,18 @@
 import { View, StyleSheet, ScrollView, Platform, Pressable } from 'react-native';
-import { ChipButton } from '@/components/ui/atoms/ChipButton';
-import { PlayerStatsListItem } from '@/components/ui/molecules/PlayerStatsListItem';
+import { ChipButton } from '@core/atoms/ChipButton';
+import { PlayerStatsListItem } from '@core/molecules/PlayerStatsListItem';
 import { Users, TrendingUp, Target, Clock, Swords, Trophy, ArrowRight, Plus } from 'lucide-react-native';
 import { usePlayers } from '@/hooks/usePlayers';
 import { useState, useEffect } from 'react';
-import { PlayerStatsModal } from '@/components/stats/PlayerStatsModal';
+import { PlayerStatsModal } from '@features/stats/PlayerStatsModal';
 import { SavedPlayer } from '@/types/game';
 import { useRouter } from 'expo-router';
-import { Button } from '@/components/ui/atoms/Button';
+import { Button } from '@core/atoms/Button';
 import { useAuth } from '@/hooks/useAuth';
 import { spacing, layout } from '@/constants/theme';
 import { useThemeColors } from '@/constants/theme/colors';
-import { Text } from '@/components/ui/atoms/Text';
-import { StatItem } from '@/components/ui/atoms/StatItem';
+import { Text } from '@core/atoms/Text';
+import { StatItem } from '@core/atoms/StatItem';
 import Animated, { FadeInUp, FadeInDown } from 'react-native-reanimated';
 import { supabase } from '@/lib/supabase';
 

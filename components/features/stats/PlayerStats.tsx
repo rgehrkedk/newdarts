@@ -1,7 +1,7 @@
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { spacing, layout } from '@/constants/theme';
-import { Text } from '@/components/core/atoms/Text';
-import { StatItem } from '@/components/core/atoms/StatItem';
+import { Text } from '@core/atoms/Text';
+import { StatItem } from '@core/atoms/StatItem';
 import { Trophy, Target, Award, Crown, Hash, Percent, Zap, TrendingUp, Timer, BarChart as BarChart3 } from 'lucide-react-native';
 import { useThemeColors } from '@/constants/theme/colors';
 import { SavedPlayer } from '@/types/game';

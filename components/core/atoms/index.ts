@@ -8,4 +8,4 @@ export * from './IconButton';
 export * from './Card';
 export * from './Input';
 export * from './StatItem';
-// export * from './ChipButton';
+export * from './ChipButton';

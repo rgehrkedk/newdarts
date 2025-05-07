@@ -1,5 +1,6 @@
 import { View, StyleSheet } from 'react-native';
 import { Trophy, ArrowUp, ArrowDown } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { spacing, layout } from '@/constants/theme';
 import { useThemeColors } from '@/constants/theme/colors';
 import { Text } from '@/components/core/atoms/Text';
@@ -180,5 +181,3 @@ const styles = StyleSheet.create({
   },
 });
 
-// Add the missing import for LinearGradient
-import { LinearGradient } from 'expo-linear-gradient';

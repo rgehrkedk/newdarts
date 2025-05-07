@@ -1,9 +1,9 @@
 import { View, StyleSheet } from 'react-native';
 import { spacing } from '@/constants/theme';
 import { Plus } from 'lucide-react-native';
-import { Text } from '@/components/core/atoms/Text';
-import { Button } from '@/components/core/atoms/Button';
-import { ListItem } from '@/components/core/molecules/ListItem';
+import { Text } from '@core/atoms/Text';
+import { Button } from '@core/atoms/Button';
+import { ListItem } from '@core/molecules/ListItem';
 
 // Define the SavedPlayer interface within the component file for portability
 interface SavedPlayer {

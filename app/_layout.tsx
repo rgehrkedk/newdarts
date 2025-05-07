@@ -11,7 +11,7 @@ import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { ThemeContext, useThemeProvider } from '@/hooks/useTheme';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from '@/providers/AuthProvider';
-import { BasicLoadingScreen } from '@/components/ui/organisms/BasicLoadingScreen';
+import { BasicLoadingScreen } from '@core/organisms/BasicLoadingScreen';
 import { useLoadingScreen } from '@/hooks/useLoadingScreen';
 
 // Prevent the splash screen from auto-hiding
@@ -74,15 +74,7 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="auth" />
             <Stack.Screen name="(tabs)" />
-            <Stack.Screen 
-              name="game" 
-              options={{ 
-                presentation: Platform.select({
-                  ios: 'fullScreenModal',
-                  default: 'modal'
-                })
-              }} 
-            />
+            <Stack.Screen name="(screens)" />
             <Stack.Screen name="+not-found" options={{ presentation: 'modal' }} />
           </Stack>
         </ThemeContext.Provider>

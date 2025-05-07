@@ -3,4 +3,5 @@
 export * from './ScoreInput';
 export * from './PlayerAccordion';
 export * from './PlayerCard';
+export * from './PlayerStatsCard';
 export * from './CompletionModals';

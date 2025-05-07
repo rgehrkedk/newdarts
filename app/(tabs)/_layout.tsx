@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useThemeColors } from '@/constants/theme/colors';
 import { spacing, layout } from '@/constants/theme';
 import { Redirect, useRouter } from 'expo-router';
-import { Text } from '@/components/ui/atoms/Text';
+import { Text } from '@core/atoms/Text';
 import { usePlayers } from '@/hooks/usePlayers';
 import { useTheme } from '@/hooks/useTheme';
 import { BlurView } from 'expo-blur';

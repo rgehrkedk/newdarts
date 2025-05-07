@@ -93,6 +93,7 @@ const palette = {
     low: '99',       // 60% opacity
     veryLow: '66',   // 40% opacity
     faint: '4D',     // 30% opacity
+    shade: '1A',
     transparent: '00' // 0% opacity
   }
 } as const;

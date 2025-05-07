@@ -1,9 +1,9 @@
 import { View, StyleSheet } from 'react-native';
 import { spacing } from '@/constants/theme';
-import { Text } from '@/components/core/atoms/Text';
-import { Input } from '@/components/core/atoms/Input';
-import { Button } from '@/components/core/atoms/Button';
-import { ColorPicker } from '@/components/core/molecules/ColorPicker';
+import { Text } from '@core/atoms/Text';
+import { Input } from '@core/atoms/Input';
+import { Button } from '@core/atoms/Button';
+import { ColorPicker } from '@core/molecules/ColorPicker';
 import { ChartBar as BarChart3, Trash2 } from 'lucide-react-native';
 
 // Define the SavedPlayer interface within the component file for portability

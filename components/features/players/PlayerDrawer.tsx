@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { PlayerList } from './PlayerList';
 import { PlayerForm } from './PlayerForm';
-import { PlayerStatsContent } from '@/components/stats/PlayerStats';
+import { PlayerStatsContent } from '@features/stats/PlayerStats';
 
 // Define the SavedPlayer interface within the component file for portability
 interface SavedPlayer {

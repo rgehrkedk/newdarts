@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, StyleSheet, Dimensions } from 'react-native';
+import { Text } from '@core/atoms/Text';
 import { spacing, typography, layout } from '@/constants/theme';
 import { useThemeColors } from '@/constants/theme/colors';
 

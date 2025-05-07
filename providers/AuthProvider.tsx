@@ -1,7 +1,7 @@
 import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Text } from '@/components/ui/atoms/Text';
-import { Button } from '@/components/ui/atoms/Button';
+import { Text } from '@core/atoms/Text';
+import { Button } from '@core/atoms/Button';
 import { useAuth } from '@/hooks/useAuth';
 import { spacing } from '@/constants/theme';
 
