@@ -1,10 +1,8 @@
-import { View, StyleSheet, ScrollView, Platform, Pressable } from 'react-native';
+import { View, StyleSheet, ScrollView, Platform } from 'react-native';
 import { ChipButton } from '@core/atoms/ChipButton';
-import { PlayerStatsListItem } from '@core/molecules/PlayerStatsListItem';
-import { Users, TrendingUp, Target, Clock, Swords, Trophy, ArrowRight, Plus } from 'lucide-react-native';
+import { Target, Clock, Swords, Trophy, ArrowRight, Plus } from 'lucide-react-native';
 import { usePlayers } from '@/hooks/usePlayers';
-import { useState, useEffect } from 'react';
-import { PlayerStatsModal } from '@features/stats/PlayerStatsModal';
+import { useState, useEffect, useCallback } from 'react';
 import { SavedPlayer } from '@/types/game';
 import { useRouter } from 'expo-router';
 import { Button } from '@core/atoms/Button';
@@ -12,8 +10,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { spacing, layout } from '@/constants/theme';
 import { useThemeColors } from '@/constants/theme/colors';
 import { Text } from '@core/atoms/Text';
-import { StatItem } from '@core/atoms/StatItem';
-import Animated, { FadeInUp, FadeInDown } from 'react-native-reanimated';
+import { GradientCard } from '@core/molecules/GradientCard';
+import { LeaderboardItem } from '@core/molecules/LeaderboardItem';
+import { PlayerStatsOverlay } from '@features/stats/components/PlayerStatsOverlay';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { supabase } from '@/lib/supabase';
 
 export default function Home() {
@@ -21,8 +21,14 @@ export default function Home() {
   const colors = useThemeColors();
   const { session } = useAuth();
   const { players, isLoading, error } = usePlayers();
-  const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [statsModalVisible, setStatsModalVisible] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState<SavedPlayer | null>(null);
+  const [statsOverlayVisible, setStatsOverlayVisible] = useState(false);
+  const [itemPosition, setItemPosition] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
   const [currentUserPlayer, setCurrentUserPlayer] = useState<SavedPlayer | null>(null);
   const [recentProgress, setRecentProgress] = useState({
     type: 'average',
@@ -163,10 +169,30 @@ export default function Home() {
     fetchLastGame();
   }, [currentUserPlayer]);
 
-  const handlePlayerPress = (player) => {
+  const handlePlayerPress = useCallback((player: SavedPlayer, position: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  }) => {
+    console.log('Player press handler called with:', player.name, position);
     setSelectedPlayer(player);
-    setStatsModalVisible(true);
-  };
+    setItemPosition(position);
+    setStatsOverlayVisible(true);
+  }, []);
+  
+  const handleCloseOverlay = useCallback(() => {
+    // This function triggers the closing animation 
+    // It's called from tapping the X button or overlay background
+    setStatsOverlayVisible(false);
+  }, []);
+
+  // A separate function for cleanup that's called after animation completes
+  const handleOverlayAnimationComplete = useCallback(() => {
+    // Called after animation is finished, clean up state
+    setSelectedPlayer(null);
+    setItemPosition(null);
+  }, []);
 
   const platformSpecificStyles = {
     shadowColor: '#000',
@@ -177,25 +203,26 @@ export default function Home() {
   };
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: colors.background.primary }]}
-      contentContainerStyle={[
-        styles.content,
-        {
-          paddingTop: 130, // Account for the blurred header height
-        }
-      ]}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Welcome Message */}
-      <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.welcomeContainer}>
-  <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
-    <Text weight="light" variant="secondary" size="xxl" style={{ marginRight: 6 }}>Welcome back,</Text>
-    <Text weight="bold" size="xxl">
-      {players.find(player => player.user_id === session?.user?.id)?.name || 'Player'}
-    </Text>
-  </View>
-</Animated.View>
+    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.content,
+          {
+            paddingTop: 130, // Account for the blurred header height
+          }
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Welcome Message */}
+        <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.welcomeContainer}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+            <Text weight="light" variant="secondary" size="xxl" style={{ marginRight: 6 }}>Welcome back,</Text>
+            <Text weight="bold" size="xxl">
+              {players.find(player => player.user_id === session?.user?.id)?.name || 'Player'}
+            </Text>
+          </View>
+        </Animated.View>
       
       {/* Game Buttons */}
       <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.gameButtonsContainer}>
@@ -219,32 +246,27 @@ export default function Home() {
       </Animated.View>
 
       {/* Progress Card */}
-      <Animated.View 
-        entering={FadeInDown.delay(300).duration(600)} 
-        style={[styles.card, { backgroundColor: colors.background.tertiary }, platformSpecificStyles]}
-      >
-        <View style={styles.cardHeader}>
-          <View style={styles.headerWithIcon}>
-            <View style={[styles.iconCircle, { backgroundColor: 'rgba(34, 197, 94, 0.2)' }]}>
-              <TrendingUp size={20} color={colors.brand.success} />
+      <Animated.View entering={FadeInDown.delay(300).duration(600)}>
+        <GradientCard
+          clean={true}
+          title="Recent Progress"
+          height={120}
+          style={platformSpecificStyles}
+        >
+          <View style={styles.progressContent}>
+            <View>
+              <Text size="xxl" weight="semibold" style={{ color: colors.brand.success }}>
+                +{recentProgress.value}
+              </Text>
+              <Text variant="secondary" size="sm">
+                Average improvement
+              </Text>
             </View>
-            <Text size="md" weight="semibold">Recent Progress</Text>
-          </View>
-        </View>
-        
-        <View style={styles.progressContent}>
-          <View>
-            <Text size="xxl" weight="semibold" style={{ color: colors.brand.success }}>
-              +{recentProgress.value}
-            </Text>
             <Text variant="secondary" size="sm">
-              Average improvement
+              since {recentProgress.period}
             </Text>
           </View>
-          <Text variant="secondary" size="sm">
-            since {recentProgress.period}
-          </Text>
-        </View>
+        </GradientCard>
       </Animated.View>
 
       {/* Quick Stats */}
@@ -270,10 +292,7 @@ export default function Home() {
       {/* Last Match */}
       <Animated.View entering={FadeInDown.delay(500).duration(600)} style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
-          <View style={styles.headerWithIcon}>
-            <Clock size={20} color={colors.brand.primary} />
-            <Text size="md" weight="semibold">Last Match</Text>
-          </View>
+          <Text size="md" weight="semibold">Last Match</Text>
           <ChipButton 
             onPress={() => router.push('/(tabs)/stats')} 
             label="History" 
@@ -281,10 +300,11 @@ export default function Home() {
           />
         </View>
         
-        <Pressable
-          style={[styles.card, { backgroundColor: colors.background.tertiary, padding: 0 }, platformSpecificStyles]}
+        <GradientCard
+          clean={true}
+          height={110}
           onPress={() => router.push('/(tabs)/stats')}
-          android_ripple={{ color: 'rgba(0,0,0,0.05)', borderless: false }}
+          style={platformSpecificStyles}
         >
           <View style={styles.matchContent}>
             <View style={styles.matchResultContainer}>
@@ -308,16 +328,13 @@ export default function Home() {
               <Text variant="secondary" size="xs">{lastMatch.date}</Text>
             </View>
           </View>
-        </Pressable>
+        </GradientCard>
       </Animated.View>
 
       {/* Leaderboard */}
       <Animated.View entering={FadeInDown.delay(600).duration(600)} style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
-          <View style={styles.headerWithIcon}>
-            <Users size={20} color={colors.brand.primary} />
-            <Text size="md" weight="semibold">Top Players</Text>
-          </View>
+          <Text size="md" weight="semibold">Leaderboard</Text>
           <ChipButton 
             onPress={() => router.push('/(tabs)/leaderboard')} 
             label="View All" 
@@ -340,31 +357,36 @@ export default function Home() {
         ) : (
           <View style={styles.leaderboard}>
             {topPlayers.map((player, index) => (
-              <PlayerStatsListItem
+              <LeaderboardItem
                 key={player.id}
                 player={player}
                 index={index}
-                onPress={() => handlePlayerPress(player)}
+                sortBy="average"
+                onPress={handlePlayerPress}
               />
             ))}
           </View>
         )}
       </Animated.View>
-
-      <PlayerStatsModal
-        visible={statsModalVisible}
-        onClose={() => {
-          setStatsModalVisible(false);
-          setSelectedPlayer(null);
-        }}
+      </ScrollView>
+      
+      {/* Shared element overlay */}
+      <PlayerStatsOverlay
         player={selectedPlayer}
+        isVisible={statsOverlayVisible}
+        onClose={handleCloseOverlay}
+        onAnimationComplete={handleOverlayAnimationComplete}
+        itemPosition={itemPosition}
       />
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  scrollView: {
     flex: 1,
   },
   content: {

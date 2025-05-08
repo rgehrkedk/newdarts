@@ -82,6 +82,8 @@ export function LeaderboardItem({
     if (onPress && cardRef.current) {
       // Measure the card's position and dimensions
       cardRef.current.measure((x, y, width, height, pageX, pageY) => {
+        console.log(`Measured position for player ${player.id}: x=${pageX}, y=${pageY}, width=${width}, height=${height}`);
+        
         // Pass measurements to parent component
         onPress(enhancedPlayer, {
           x: pageX,
@@ -121,12 +123,17 @@ export function LeaderboardItem({
           </Animated.View>
 
           <View style={styles.content}>
-            <Avatar
-              name={player.name}
-              color={player.color}
-              size={40}
-              sharedTransitionTag={player.id}
-            />
+            <Animated.View 
+              style={styles.avatarWrapper}
+              sharedTransitionTag={`avatar-container-${player.id}`}
+            >
+              <Avatar
+                name={player.name}
+                color={player.color}
+                size={40}
+                sharedTransitionTag={`avatar-${player.id}`}
+              />
+            </Animated.View>
 
             <View style={styles.textContainer}>
               <Animated.Text 
@@ -181,7 +188,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.md,
   },
-  // Avatar now uses the Avatar component
+  avatarWrapper: {
+    // Adding a dedicated wrapper for shared element transitions
+    borderRadius: 20, // Half of the avatar size for proper masking
+    overflow: 'hidden',
+  },
   textContainer: {
     gap: spacing.xs,
   },

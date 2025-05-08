@@ -14,6 +14,7 @@ export default function ModalsLayout() {
       <Stack.Screen name="set-complete" />
       <Stack.Screen name="checkout" />
       <Stack.Screen name="player-details/[id]" />
+      <Stack.Screen name="matches" />
     </Stack>
   );
 }
