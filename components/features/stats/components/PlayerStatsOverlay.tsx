@@ -2,19 +2,6 @@
  * PlayerStatsOverlay
  * 
  * An animated overlay that expands from a source element to a full-screen modal.
- * 
- * IMPORTANT USAGE NOTES:
- * 1. This component MUST be placed at the root level of the page, outside of any ScrollView
- * 2. Proper structure is:
- *    <View style={{flex: 1}}>
- *      <ScrollView>
- *        Your content here
- *      </ScrollView>
- *      <PlayerStatsOverlay />
- *    </View>
- * 
- * 3. The component requires itemPosition data from the source element
- * 4. Make sure your list items use the ref and measure callback properly
  */
 
 import React, { useEffect } from 'react';
@@ -41,25 +28,25 @@ import Animated, {
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import { PlayerStatsContent } from '../PlayerStats';
 
-// Animation configuration - can be adjusted to control animation speed and feel
+// Animation configuration - significantly slower and more dramatic
 const ANIMATION_CONFIG = {
   // Opening animation (expansion)
   OPEN_ANIMATION: {
-    STIFFNESS: 120,       // Controls speed (lower = slower animation)
-    DAMPING: 25,          // Controls bounce (higher = less bounce) 
-    MASS: 0.8,            // Controls inertia (higher = slower movement)
-    DURATION: 4000,  // Optional direct control of duration in ms (e.g. 800)
+    STIFFNESS: 35,        // Much lower stiffness for slower movement
+    DAMPING: 20,          // Slightly reduced damping for a tiny bit more bounce 
+    MASS: 2.5,            // Much higher mass for slower, weightier movement
+    DURATION: 2200,       // Much longer duration (over a second)
   },
   
   // Content fade-in
   CONTENT_FADE: {
-    DURATION: 300,        // How long content takes to fade in
-    DELAY: 200,           // When content starts fading in
+    DURATION: 600,        // Longer fade-in
+    DELAY: 500,           // Wait longer before starting fade
   },
   
   // Closing animation
   CLOSE_ANIMATION: {
-    DURATION: 450,        // How long closing animation takes
+    DURATION: 650,        // How long closing animation takes
   }
 };
 
@@ -67,7 +54,7 @@ interface PlayerStatsOverlayProps {
   player: SavedPlayer | null;
   isVisible: boolean;
   onClose: () => void;
-  onAnimationComplete?: () => void; // New callback for animation completion
+  onAnimationComplete?: () => void;
   itemPosition: {
     x: number;
     y: number;
@@ -75,8 +62,6 @@ interface PlayerStatsOverlayProps {
     height: number;
   } | null;
   onOptionsPress?: () => void;
-  // Optional animation config override
-  animationConfig?: typeof ANIMATION_CONFIG;
 }
 
 export function PlayerStatsOverlay({
@@ -86,7 +71,6 @@ export function PlayerStatsOverlay({
   onAnimationComplete,
   itemPosition,
   onOptionsPress,
-  animationConfig = ANIMATION_CONFIG, // Use default config if not provided
 }: PlayerStatsOverlayProps) {
   const colors = useThemeColors();
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
@@ -98,39 +82,46 @@ export function PlayerStatsOverlay({
   
   // Gesture values
   const translateY = useSharedValue(0);
-  const gestureActive = useSharedValue(false);
   
-  // Define threshold for dismissal (percentage of screen height)
-  const DISMISS_THRESHOLD = 0.2; // 20% of screen height
-  
-  // Simple gesture handler for dragging the overlay
+  // Gesture handler for dragging the overlay
   const gestureHandler = useAnimatedGestureHandler({
     onStart: (_, ctx: any) => {
+      // Store current position in context
       ctx.startY = translateY.value;
     },
     onActive: (event, ctx) => {
-      // Only allow dragging downward
-      translateY.value = Math.max(0, ctx.startY + event.translationY);
+      // Only allow dragging downward, with some resistance
+      if (event.translationY > 0) {
+        translateY.value = event.translationY;
+      }
       
       // Adjust content opacity as user drags
-      const dragRatio = translateY.value / (SCREEN_HEIGHT * 0.15);
-      contentOpacity.value = Math.max(0.3, 1 - (dragRatio * 0.5));
+      const threshold = SCREEN_HEIGHT * 0.15;
+      const dragRatio = Math.min(1, translateY.value / threshold);
+      contentOpacity.value = 1 - dragRatio * 0.5; 
     },
     onEnd: (event) => {
-      if (translateY.value > SCREEN_HEIGHT * 0.15 || event.velocityY > 500) {
-        // Dismiss if dragged far enough
+      const threshold = SCREEN_HEIGHT * 0.15;
+      
+      if (translateY.value > threshold || event.velocityY > 500) {
+        // Dismiss if dragged far enough or with enough velocity
         translateY.value = withTiming(SCREEN_HEIGHT, {
           duration: 300,
-        }, () => {
-          'worklet';
-          runOnJS(onClose)();
+          easing: Easing.out(Easing.cubic),
+        }, (finished) => {
+          if (finished) {
+            runOnJS(onClose)();
+          }
         });
         
-        contentOpacity.value = withTiming(0, { duration: 200 });
+        contentOpacity.value = withTiming(0, { duration: 250 });
       } else {
-        // Return to original position
-        translateY.value = withTiming(0, { duration: 200 });
-        contentOpacity.value = withTiming(1, { duration: 200 });
+        // Spring back to original position
+        translateY.value = withTiming(0, {
+          duration: 300,
+          easing: Easing.out(Easing.cubic),
+        });
+        contentOpacity.value = withTiming(1, { duration: 250 });
       }
     },
   });
@@ -150,20 +141,16 @@ export function PlayerStatsOverlay({
 
   // Animation for opening and closing the overlay
   useEffect(() => {
-    const hasValidPosition = itemPosition && 
-                           itemPosition.x !== undefined && 
-                           itemPosition.y !== undefined;
-    
     if (isVisible) {
-      // Reset any gesture state if opening
+      // Reset all gesture and animation state before opening
       translateY.value = 0;
       
       // Opening animation: Use spring physics for configurable feel
       progress.value = withSpring(1, {
-        damping: animationConfig.OPEN_ANIMATION.DAMPING,
-        stiffness: animationConfig.OPEN_ANIMATION.STIFFNESS,
-        mass: animationConfig.OPEN_ANIMATION.MASS,
-        duration: animationConfig.OPEN_ANIMATION.DURATION, // Optional
+        damping: ANIMATION_CONFIG.OPEN_ANIMATION.DAMPING,
+        stiffness: ANIMATION_CONFIG.OPEN_ANIMATION.STIFFNESS,
+        mass: ANIMATION_CONFIG.OPEN_ANIMATION.MASS,
+        duration: ANIMATION_CONFIG.OPEN_ANIMATION.DURATION,
         overshootClamping: false,
         restDisplacementThreshold: 0.01,
         restSpeedThreshold: 0.01,
@@ -171,35 +158,39 @@ export function PlayerStatsOverlay({
       
       // Fade in content after the card has started expanding
       contentOpacity.value = withTiming(1, {
-        duration: animationConfig.CONTENT_FADE.DURATION,
+        duration: ANIMATION_CONFIG.CONTENT_FADE.DURATION,
         easing: Easing.ease,
-        delay: animationConfig.CONTENT_FADE.DELAY,
+        delay: ANIMATION_CONFIG.CONTENT_FADE.DELAY,
       });
     } else {
-      // Only run closing animation if not already being dragged away
-      if (!gestureActive.value) {
-        // For closing, we want to quickly hide content first
-        contentOpacity.value = withTiming(0, { 
-          duration: 180,
-          easing: Easing.out(Easing.quad),
-        });
-        
-        // Then smoothly animate back to the source position
-        // Use timing for more predictable closing animation
-        progress.value = withTiming(0, {
-          duration: animationConfig.CLOSE_ANIMATION.DURATION,
-          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-        }, (finished) => {
-          'worklet';
-          if (finished && onAnimationComplete) {
-            // Call the animation completion callback instead of onClose
-            // onClose is already called to trigger this animation
-            runOnJS(onAnimationComplete)();
-          }
-        });
+      // Already being dragged away - we'll let gesture handler take care of it
+      if (translateY.value > SCREEN_HEIGHT * 0.1) {
+        // Continue the gesture-initiated dismissal
+        return;
       }
+      
+      // Regular close animation
+      // First hide content
+      contentOpacity.value = withTiming(0, { 
+        duration: 180,
+        easing: Easing.out(Easing.quad),
+      });
+      
+      // Then smoothly animate back to the source position
+      progress.value = withTiming(0, {
+        duration: ANIMATION_CONFIG.CLOSE_ANIMATION.DURATION,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      }, (finished) => {
+        'worklet';
+        if (finished && onAnimationComplete) {
+          runOnJS(onAnimationComplete)();
+        }
+      });
+      
+      // Reset drag position
+      translateY.value = withTiming(0, { duration: 300 });
     }
-  }, [isVisible, progress, contentOpacity, translateY, gestureActive, itemPosition, onClose, onAnimationComplete]);
+  }, [isVisible, progress, contentOpacity, translateY, itemPosition, onClose, onAnimationComplete, SCREEN_HEIGHT]);
   
   // Handle status bar appearance
   useEffect(() => {
@@ -222,17 +213,16 @@ export function PlayerStatsOverlay({
   // Background overlay style
   const overlayStyle = useAnimatedStyle(() => {
     // Slightly accelerate opacity animations for better feel
-    // Use different interpolation for opening vs closing
     const opacityValue = isVisible 
       ? interpolate(
           progress.value,
-          [0, 0.5, 1],     // Accelerate during opening
+          [0, 0.5, 1],
           [0, 0.8, 1],
           Extrapolate.CLAMP
         )
       : interpolate(
           progress.value,
-          [0, 0.3, 1],     // Quick fade out during closing
+          [0, 0.3, 1],
           [0, 0, 1],
           Extrapolate.CLAMP
         );
@@ -254,7 +244,7 @@ export function PlayerStatsOverlay({
     };
   });
 
-  // Modal container style with simpler implementation
+  // Modal container style with proper dragging support
   const modalStyle = useAnimatedStyle(() => {
     // Use default values if position data is missing
     const hasValidPosition = itemPosition && 
@@ -286,7 +276,11 @@ export function PlayerStatsOverlay({
         [0, 1],
         [initialY, targetY],
         Extrapolate.CLAMP
-      ) + translateY.value, // Add drag offset
+      ),
+      // Combine base position with drag offset
+      transform: [
+        { translateY: translateY.value }
+      ],
       width: interpolate(
         progress.value,
         [0, 1],
@@ -299,10 +293,8 @@ export function PlayerStatsOverlay({
         [initialHeight, targetHeight],
         Extrapolate.CLAMP
       ),
-      // Rounded corners at the top
       borderTopLeftRadius: 20,
       borderTopRightRadius: 20,
-      // Simple shadow
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 5 },
       shadowOpacity: 0.3,
@@ -334,14 +326,23 @@ export function PlayerStatsOverlay({
     };
   });
   
-  // Simpler drag indicator style
+  // Drag indicator style with consistent usage of .value
   const dragIndicatorStyle = useAnimatedStyle(() => {
-    // Stretch the indicator slightly as user drags
-    const width = 40 + (translateY.value * 0.2);
-    
     return {
-      width: width > 40 ? width : 40,
+      width: interpolate(
+        translateY.value,
+        [0, 100],
+        [40, 60],
+        Extrapolate.CLAMP
+      ),
       opacity: 0.9,
+    };
+  });
+
+  // Animated style for close button opacity
+  const closeButtonOpacityStyle = useAnimatedStyle(() => {
+    return {
+      opacity: contentOpacity.value
     };
   });
 
@@ -357,13 +358,13 @@ export function PlayerStatsOverlay({
       paddingTop: interpolate(
         progress.value,
         [0, 1],
-        [spacing.md, spacing.sm + spacing.sm], // Respect safe area top inset
+        [spacing.md, spacing.sm],
         Extrapolate.CLAMP
       ),
       paddingBottom: interpolate(
         progress.value,
         [0, 1],
-        [spacing.md, spacing.lg],
+        [spacing.md, spacing.md],
         Extrapolate.CLAMP
       ),
       borderBottomWidth: interpolate(
@@ -455,18 +456,11 @@ export function PlayerStatsOverlay({
 
               {/* Close button - fades in after animation */}
               <Animated.View 
-                style={[
-                  styles.closeButtonContainer,
-                  { opacity: contentOpacity.value } // Tie to content opacity for better UX
-                ]}
+                style={[styles.closeButtonContainer, closeButtonOpacityStyle]}
               >
                 <IconButton
                   icon={X}
-                  onPress={() => {
-                    // Using the same method as TouchableOpacity in background overlay
-                    // This should trigger the isVisible=false animation sequence
-                    onClose();
-                  }}
+                  onPress={onClose}
                   variant="transparent"
                   size={24}
                   style={styles.closeButton}
@@ -495,8 +489,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(120, 120, 120, 0.8)', // Darker color for better visibility
     borderRadius: 3,
     alignSelf: 'center',
-    marginTop: 15,
-    marginBottom: 10,
+    marginTop: 8, // Reduced from 15
+    marginBottom: 6, // Reduced from 10
   },
   header: {
     width: '100%',
