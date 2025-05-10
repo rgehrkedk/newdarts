@@ -14,6 +14,10 @@ interface GradientCardProps {
   gradientColors?: string[];
   overlayColor?: string;
   onPress?: () => void;
+  pressable?: boolean; // Whether the card is pressable
+  variant?: 'primary' | 'secondary' | 'avatar' | 'neutral'; // Card color variant
+  avatarColor?: string; // Optional avatar color (used when variant is 'avatar')
+  avatarGradientColor?: string; // Optional avatar gradient color (used when variant is 'avatar')
   animationDelay?: number; // Delay in ms for the animation
   icon?: LucideIcon; // Optional icon
   iconSize?: number; // Optional icon size
@@ -26,6 +30,9 @@ interface GradientCardProps {
   innerBackgroundColor?: string; // Background color for the inner card with transparency
   innerTransparency?: string; // Hexadecimal transparency value (00-FF) for inner card (see colors.transparency)
   outerTransparency?: string; // Hexadecimal transparency value (00-FF) for gradient colors (see colors.transparency)
+  borderRadius?: number; // Custom border radius for the card
+  innerMargin?: number; // Margin between outer and inner card (default: spacing.xxs)
+  contentPadding?: number | { horizontal?: number; vertical?: number }; // Custom padding for the content
 }
 
 export function GradientCard({
@@ -34,6 +41,10 @@ export function GradientCard({
   gradientColors,
   overlayColor,
   onPress = () => {}, // Default no-op function
+  pressable = true, // Default to pressable
+  variant = 'primary', // Default to primary variant
+  avatarColor,
+  avatarGradientColor,
   animationDelay = 0,
   icon: Icon,
   iconSize = 24,
@@ -46,13 +57,16 @@ export function GradientCard({
   innerBackgroundColor,
   innerTransparency,
   outerTransparency,
+  borderRadius,
+  innerMargin,
+  contentPadding,
 }: GradientCardProps) {
   const themeColors = useThemeColors();
   
   // Get default values from the theme
   innerTransparency = innerTransparency || themeColors.transparency.mediumLow; // Default 70% opacity
   outerTransparency = outerTransparency || themeColors.transparency.full; // Default 100% opacity
-  
+
   // Helper function to apply transparency to a color
   const applyTransparency = (color: string, transparency: string): string => {
     // Check if color already has transparency
@@ -66,14 +80,57 @@ export function GradientCard({
     // Return original color if format is unknown
     return color;
   };
+
+  // Get gradient colors based on variant
+  const getVariantColors = () => {
+    if (gradientColors) return gradientColors;
+
+    switch (variant) {
+      case 'primary':
+        return [themeColors.brand.primary, themeColors.brand.primaryGradient];
+      case 'secondary':
+        return [themeColors.brand.secondary, themeColors.brand.secondaryGradient];
+      case 'avatar':
+        if (avatarColor && avatarGradientColor) {
+          return [avatarColor, avatarGradientColor];
+        }
+        // Default avatar colors if none provided
+        return [themeColors.avatar.colors.purple, themeColors.avatar.colors.purpleGradient];
+      case 'neutral':
+        return [themeColors.background.primary, themeColors.background.primary];
+      default:
+        return [themeColors.brand.primary, themeColors.brand.primaryGradient];
+    }
+  };
   
+  // Calculate content padding
+  const getContentPadding = () => {
+    if (!contentPadding) {
+      return { padding: spacing.md }; // Default padding
+    }
+
+    if (typeof contentPadding === 'number') {
+      return { padding: contentPadding };
+    }
+
+    const { horizontal, vertical } = contentPadding;
+    return {
+      paddingHorizontal: horizontal !== undefined ? horizontal : spacing.md,
+      paddingVertical: vertical !== undefined ? vertical : spacing.md,
+    };
+  };
+
   // Content component to keep the card content consistent between versions
   const DefaultContent = () => (
-    <View style={[styles.content, { justifyContent: contentAlignment }]}>
+    <View style={[
+      styles.content,
+      getContentPadding(),
+      { justifyContent: contentAlignment }
+    ]}>
       {Icon && (
-        <View 
+        <View
           style={[
-            styles.iconContainer, 
+            styles.iconContainer,
             { backgroundColor: themeColors.background.card.secondary }
           ]}
         >
@@ -92,37 +149,85 @@ export function GradientCard({
       )}
     </View>
   );
-  
+
   // Content to display - either children or default content
   const ContentToDisplay = children ? (
-    <View style={[styles.content, { justifyContent: contentAlignment }]}>
+    <View style={[
+      styles.content,
+      getContentPadding(),
+      { justifyContent: contentAlignment }
+    ]}>
       {children}
     </View>
   ) : (
     <DefaultContent />
   );
 
+  // Get appropriate background color for clean version based on variant
+  const getCleanBackground = () => {
+    if (backgroundColor) return backgroundColor;
+
+    switch (variant) {
+      case 'primary':
+        return themeColors.background.card.primary;
+      case 'secondary':
+        return themeColors.background.card.primary;
+      case 'avatar':
+        return themeColors.background.card.primary;
+      case 'neutral':
+        return themeColors.background.primary;
+      default:
+        return themeColors.background.card.primary;
+    }
+  };
+
+  // Calculate border radius values
+  const cardBorderRadius = borderRadius || layout.radius.xl;
+  const cardInnerMargin = innerMargin !== undefined ? innerMargin : spacing.xxs;
+  const innerBorderRadius = Math.max(0, cardBorderRadius - cardInnerMargin);
+
   // Return the clean version if specified
   if (clean) {
     return (
       <Animated.View
         entering={FadeInDown.delay(animationDelay).duration(600)}
-        style={[styles.cardWrapper, style]}
+        style={[
+          styles.cardWrapper,
+          { borderRadius: cardBorderRadius },
+          style
+        ]}
       >
-        <Pressable
-          style={[
-            styles.card,
-            styles.cleanCard,
-            { 
-              backgroundColor: backgroundColor || themeColors.background.card.primary,
-              height: height 
-            }
-          ]}
-          onPress={onPress}
-          android_ripple={{ color: 'rgba(0,0,0,0.1)' }}
-        >
-          {ContentToDisplay}
-        </Pressable>
+        {pressable ? (
+          <Pressable
+            style={[
+              styles.card,
+              styles.cleanCard,
+              {
+                backgroundColor: getCleanBackground(),
+                height: height,
+                borderRadius: cardBorderRadius,
+              }
+            ]}
+            onPress={onPress}
+            android_ripple={{ color: 'rgba(0,0,0,0.1)' }}
+          >
+            {ContentToDisplay}
+          </Pressable>
+        ) : (
+          <View
+            style={[
+              styles.card,
+              styles.cleanCard,
+              {
+                backgroundColor: getCleanBackground(),
+                height: height,
+                borderRadius: cardBorderRadius,
+              }
+            ]}
+          >
+            {ContentToDisplay}
+          </View>
+        )}
       </Animated.View>
     );
   }
@@ -131,41 +236,72 @@ export function GradientCard({
   return (
     <Animated.View
       entering={FadeInDown.delay(animationDelay).duration(600)}
-      style={[styles.cardWrapper, style]}
+      style={[
+        styles.cardWrapper,
+        { borderRadius: cardBorderRadius },
+        style
+      ]}
     >
       <LinearGradient
-        colors={
-          gradientColors 
-            ? gradientColors.map(color => applyTransparency(color, outerTransparency))
-            : [
-                applyTransparency(themeColors.brand.primary, outerTransparency), 
-                applyTransparency(themeColors.brand.primaryGradient, outerTransparency)
-              ]
-        }
+        colors={getVariantColors().map(color => applyTransparency(color, outerTransparency))}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.gradientContainer}
+        style={[
+          styles.gradientContainer,
+          { borderRadius: cardBorderRadius }
+        ]}
       >
-        <Pressable
-          style={[
-            styles.card,
-            { 
-              backgroundColor: innerBackgroundColor || 
-                (themeColors.background.primary + innerTransparency), // Use provided transparency
-              height: height 
-            }
-          ]}
-          onPress={onPress}
-          android_ripple={{ color: 'rgba(0,0,0,0.1)' }}
-        >
-          <View 
+        {pressable ? (
+          <Pressable
             style={[
-              styles.overlay, 
-              { backgroundColor: overlayColor || themeColors.background.overlay }
-            ]} 
-          />
-          {ContentToDisplay}
-        </Pressable>
+              styles.card,
+              {
+                backgroundColor: innerBackgroundColor ||
+                  (themeColors.background.primary + innerTransparency), // Use provided transparency
+                height: height,
+                margin: cardInnerMargin,
+                borderRadius: innerBorderRadius
+              }
+            ]}
+            onPress={onPress}
+            android_ripple={{ color: 'rgba(0,0,0,0.1)' }}
+          >
+            <View
+              style={[
+                styles.overlay,
+                {
+                  backgroundColor: overlayColor || themeColors.background.overlay,
+                  borderRadius: innerBorderRadius
+                }
+              ]}
+            />
+            {ContentToDisplay}
+          </Pressable>
+        ) : (
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: innerBackgroundColor ||
+                  (themeColors.background.primary + innerTransparency), // Use provided transparency
+                height: height,
+                margin: cardInnerMargin,
+                borderRadius: innerBorderRadius
+              }
+            ]}
+          >
+            <View
+              style={[
+                styles.overlay,
+                {
+                  backgroundColor: overlayColor || themeColors.background.overlay,
+                  borderRadius: innerBorderRadius
+                }
+              ]}
+            />
+            {ContentToDisplay}
+          </View>
+        )}
       </LinearGradient>
     </Animated.View>
   );
@@ -173,16 +309,12 @@ export function GradientCard({
 
 const styles = StyleSheet.create({
   cardWrapper: {
-    borderRadius: layout.radius.xl,
     overflow: 'hidden',
   },
   gradientContainer: {
-    borderRadius: layout.radius.xl,
     overflow: 'hidden', // Ensure gradient stays within border radius
   },
   card: {
-    margin: spacing.xxs,
-    borderRadius: layout.radius.xl - spacing.xxs, // Adjust to align with outer wrapper
     overflow: 'hidden',
     backdropFilter: 'blur(20px)',
   },
@@ -195,16 +327,13 @@ const styles = StyleSheet.create({
     elevation: 4,
     margin: 0, // No margin needed for clean version
     borderWidth: 0,
-    borderRadius: layout.radius.xl, // Ensure consistent border radius with wrapper
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: layout.radius.xl - spacing.xxs, // Match inner card border radius
   },
   content: {
     flex: 1,
-    padding: spacing.xl,
-    // justifyContent now comes from props
+    // Padding is now applied dynamically through getContentPadding()
   },
   iconContainer: {
     width: 48,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { LayoutGrid, User, Target, ChartBar, Settings as SettingsIcon, Medal, Plus } from 'lucide-react-native';
+import { LayoutGrid, User, Target, ChartBar, Settings as SettingsIcon, Medal, Plus, TestTubeDiagonal } from 'lucide-react-native';
 import { TouchableOpacity, StyleSheet, View, Platform } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useThemeColors } from '@/constants/theme/colors';
@@ -186,6 +186,12 @@ function HeaderRight({ colors, router }: { colors: any; router: any }) {
         style={styles.headerButton}
       >
         <User size={20} color={colors.text.primary} />
+      </TouchableOpacity>
+      <TouchableOpacity 
+        onPress={() => router.push('/(screens)/test/test')}
+        style={styles.headerButton}
+      >
+        <TestTubeDiagonal size={20} color={colors.text.primary} />
       </TouchableOpacity>
     </View>
   );

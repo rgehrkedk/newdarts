@@ -3,6 +3,7 @@ export * from './HighScores';
 export * from './Highlights';
 export * from './PerformanceSummary';
 export * from './PeriodFilter';
+export * from './PlayerOverlay';
 export * from './PlayerStatsOverlay';
 export * from './RecentGame';
 export * from './StickyHeader';

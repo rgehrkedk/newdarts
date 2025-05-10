@@ -13,88 +13,88 @@ interface AvatarProps {
    * Name or text to use for initials
    */
   name: string;
-  
+
   /**
    * Primary color for the avatar
    */
   color: string;
-  
+
   /**
    * Optional gradient color for enhanced appearance
    */
   gradientColor?: string;
-  
+
   /**
    * Size of the avatar (width and height)
    * @default 40
    */
   size?: number;
-  
+
   /**
    * Determines if a gradient should be used
    * @default true
    */
   useGradient?: boolean;
-  
+
   /**
    * Optional shadow for the avatar
    * @default false
    */
   withShadow?: boolean;
-  
+
   /**
    * Shared transition tag for animations
    */
   sharedTransitionTag?: string;
-  
+
   /**
    * Additional style for the container
    */
   style?: ViewStyle;
-  
+
   /**
    * Additional style for the text
    */
   textStyle?: TextStyle;
-  
+
   /**
    * Number of initials to show (1 or 2)
    * @default 1
    */
   initialsCount?: 1 | 2;
-  
+
   /**
    * Optional handler for press events
    */
   onPress?: () => void;
-  
+
   /**
    * Use blur effect under the avatar
    * @default true
    */
   useBlur?: boolean;
-  
+
   /**
    * Blur intensity for the inner wrapper
    * @default 30 for dark theme, 25 for light theme
    */
   blurIntensity?: number;
-  
+
   /**
    * Inner transparency value
    */
   innerTransparency?: string;
-  
+
   /**
    * Outer transparency value for gradient
    */
   outerTransparency?: string;
-  
+
   /**
    * Optional container background color
    */
   containerBackgroundColor?: string;
-  
+
   /**
    * Animation entering delay in ms
    */
@@ -215,6 +215,7 @@ export function Avatar({
     return <View style={styles.nonBlurWrapper}>{children}</View>;
   };
   
+
   // Gradient version (default)
   if (useGradient) {
     // Check for known color pattern or use fallback
@@ -244,22 +245,22 @@ export function Avatar({
     } else {
       defaultGradientColor = color;
     }
-    
+
     // Custom gradient colors for inner wrapper with transparency
-    const neutralGradientStart = isDark 
+    const neutralGradientStart = isDark
       ? `${colors.background.primary}${colors.transparency.medium}` // Dark theme start
       : `${colors.background.primary}${colors.transparency.high}`; // Light theme start
-    const neutralGradientEnd = isDark 
+    const neutralGradientEnd = isDark
       ? `${colors.background.tertiary}${colors.transparency.medium}` // Dark theme end
       : `${colors.background.tertiary}${colors.transparency.low}`; // Light theme end
-    
+
     const Container = onPress ? Pressable : View;
     const containerProps = onPress ? {
       onPress,
       style: ({ pressed }) => [styles.pressable, pressed && styles.pressed],
       android_ripple: { color: 'rgba(0,0,0,0.1)', borderless: true }
     } : { style: styles.pressable };
-    
+
     return (
       <Wrapper>
         <Container {...containerProps}>
@@ -282,9 +283,9 @@ export function Avatar({
                   end={{ x: 1, y: 1 }}
                   style={[
                     styles.avatarContent,
-                    { 
-                      backgroundColor: isDark 
-                        ? `rgba(255, 255, 255, 0.1)` 
+                    {
+                      backgroundColor: isDark
+                        ? `rgba(255, 255, 255, 0.1)`
                         : `rgba(0, 0, 0, 0.05)`
                     }
                   ]}
@@ -352,6 +353,7 @@ export function Avatar({
 }
 
 const styles = StyleSheet.create({
+  // Avatar styles
   gradientContainer: {
     width: '100%',
     height: '100%',

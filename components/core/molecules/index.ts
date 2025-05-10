@@ -14,3 +14,4 @@ export * from './LeaderboardItem';
 export * from './SortDropdown';
 export * from './DateRangePicker';
 export * from './PlayerStatsListItem';
+export * from './LeaderboardPlayer';
