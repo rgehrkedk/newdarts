@@ -23,6 +23,9 @@ export function LeaderboardItem({
 }: LeaderboardItemProps) {
   const colors = useThemeColors();
   const cardRef = useRef<View>(null);
+  
+  // Flag to ensure we don't trigger multiple measurements
+  const isMeasuring = useRef(false);
 
   // Get display value based on sort category
   const getStatValue = (): string => {
@@ -79,20 +82,31 @@ export function LeaderboardItem({
   };
 
   const handlePress = () => {
-    if (onPress && cardRef.current) {
-      // Measure the card's position and dimensions
-      cardRef.current.measure((x, y, width, height, pageX, pageY) => {
-        console.log(`Measured position for player ${player.id}: x=${pageX}, y=${pageY}, width=${width}, height=${height}`);
-        
-        // Pass measurements to parent component
-        onPress(enhancedPlayer, {
-          x: pageX,
-          y: pageY,
-          width,
-          height
+    if (!onPress || !cardRef.current || isMeasuring.current) return;
+    
+    // Set the measuring flag to prevent multiple measurements
+    isMeasuring.current = true;
+    
+    // Measure the card's position and dimensions
+    // The setTimeout ensures the UI is fully rendered before measuring
+    setTimeout(() => {
+      if (cardRef.current) {
+        cardRef.current.measure((x, y, width, height, pageX, pageY) => {
+          console.log(`Measured position for player ${player.id}: x=${pageX}, y=${pageY}, width=${width}, height=${height}`);
+          
+          // Pass measurements to parent component
+          onPress(enhancedPlayer, {
+            x: pageX,
+            y: pageY,
+            width,
+            height
+          });
+          
+          // Reset the measuring flag
+          isMeasuring.current = false;
         });
-      });
-    }
+      }
+    }, 10); // Short delay to ensure measurement is accurate
   };
 
   return (
@@ -101,6 +115,11 @@ export function LeaderboardItem({
         ref={cardRef}
         onPress={handlePress}
         style={[styles.container, { backgroundColor: colors.background.card.primary }]}
+        // Force remeasurement when layout changes
+        onLayout={() => {
+          // Reset measurement flag whenever layout changes
+          isMeasuring.current = false;
+        }}
       >
         <View style={styles.rankAndContent}>
           <Animated.View 

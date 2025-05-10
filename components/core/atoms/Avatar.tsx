@@ -75,6 +75,12 @@ interface AvatarProps {
   useBlur?: boolean;
   
   /**
+   * Blur intensity for the inner wrapper
+   * @default 30 for dark theme, 25 for light theme
+   */
+  blurIntensity?: number;
+  
+  /**
    * Inner transparency value
    */
   innerTransparency?: string;
@@ -107,13 +113,16 @@ export function Avatar({
   textStyle,
   initialsCount = 1,
   onPress,
-
+  useBlur = true,
+  blurIntensity,
   animationDelay = 0,
 }: AvatarProps) {
   const colors = useThemeColors();
   const { isDark } = useTheme();
   
-  // No longer need these parameters since we're using direct colors
+  // Set default blur intensity based on theme if not provided
+  const defaultBlurIntensity = isDark ? 30 : 25;
+  const effectiveBlurIntensity = blurIntensity !== undefined ? blurIntensity : defaultBlurIntensity;
   
   // Get initials based on initialsCount
   const getInitials = (): string => {
@@ -168,8 +177,6 @@ export function Avatar({
       </View>
     );
   
-  // We'll handle the onPress directly in the component render
-    
   // Text component based on shared transition
   const TextElement = ({ children }: { children: React.ReactNode }) => {
     if (sharedTransitionTag) {
@@ -190,6 +197,22 @@ export function Avatar({
         {children}
       </Text>
     );
+  };
+  
+  // Inner blur wrapper component
+  const InnerBlurWrapper = ({ children }: { children: React.ReactNode }) => {
+    if (useBlur) {
+      return (
+        <BlurView
+          intensity={effectiveBlurIntensity}
+          tint={isDark ? 'dark' : 'light'}
+          style={styles.blurEffect}
+        >
+          {children}
+        </BlurView>
+      );
+    }
+    return <View style={styles.nonBlurWrapper}>{children}</View>;
   };
   
   // Gradient version (default)
@@ -224,10 +247,10 @@ export function Avatar({
     
     // Custom gradient colors for inner wrapper with transparency
     const neutralGradientStart = isDark 
-      ? `${colors.background.primary}${colors.transparency.veryLow}` // Dark theme start
+      ? `${colors.background.primary}${colors.transparency.medium}` // Dark theme start
       : `${colors.background.primary}${colors.transparency.high}`; // Light theme start
     const neutralGradientEnd = isDark 
-      ? `${colors.background.tertiary}${colors.transparency.faint}` // Dark theme end
+      ? `${colors.background.tertiary}${colors.transparency.medium}` // Dark theme end
       : `${colors.background.tertiary}${colors.transparency.low}`; // Light theme end
     
     const Container = onPress ? Pressable : View;
@@ -251,12 +274,8 @@ export function Avatar({
             style={styles.gradientContainer}
           >
             <View style={styles.innerWrapper}>
-              {/* Inner gradient with neutral colors */}
-              <BlurView
-                intensity={isDark ? 25 : 20}
-                tint={isDark ? 'dark' : 'light'}
-                style={styles.blurEffect}
-              >
+              {/* Enhanced blur effect in inner wrapper */}
+              <InnerBlurWrapper>
                 <LinearGradient
                   colors={[neutralGradientStart, neutralGradientEnd]}
                   start={{ x: 0, y: 0 }}
@@ -265,14 +284,14 @@ export function Avatar({
                     styles.avatarContent,
                     { 
                       backgroundColor: isDark 
-                        ? `rgba(255, 255, 255, 0.08)` 
-                        : `rgba(0, 0, 0, 0.03)`
+                        ? `rgba(255, 255, 255, 0.1)` 
+                        : `rgba(0, 0, 0, 0.05)`
                     }
                   ]}
                 >
                   <TextElement>{getInitials()}</TextElement>
                 </LinearGradient>
-              </BlurView>
+              </InnerBlurWrapper>
             </View>
           </LinearGradient>
         </Container>
@@ -307,12 +326,8 @@ export function Avatar({
           ]}
         >
           <View style={styles.innerWrapper}>
-            {/* Inner gradient with neutral colors */}
-            <BlurView
-              intensity={isDark ? 25 : 20}
-              tint={isDark ? 'dark' : 'light'}
-              style={styles.blurEffect}
-            >
+            {/* Enhanced blur effect in inner wrapper */}
+            <InnerBlurWrapper>
               <LinearGradient
                 colors={[neutralGradientStart, neutralGradientEnd]}
                 start={{ x: 0, y: 0 }}
@@ -321,14 +336,14 @@ export function Avatar({
                   styles.avatarContent,
                   { 
                     backgroundColor: isDark 
-                      ? `rgba(255, 255, 255, 0.08)` 
-                      : `rgba(0, 0, 0, 0.03)`
+                      ? `rgba(255, 255, 255, 0.1)` 
+                      : `rgba(0, 0, 0, 0.05)`
                   }
                 ]}
               >
                 <TextElement>{getInitials()}</TextElement>
               </LinearGradient>
-            </BlurView>
+            </InnerBlurWrapper>
           </View>
         </View>
       </Container>
@@ -352,6 +367,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   blurEffect: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 999,
+    overflow: 'hidden',
+    backdropFilter: 'blur(8px)', // This won't work in React Native but kept for reference
+  },
+  nonBlurWrapper: {
     width: '100%',
     height: '100%',
     borderRadius: 999,
