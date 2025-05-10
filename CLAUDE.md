@@ -7,6 +7,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run build:web` - Export the app for web
 - `npm run lint` - Run ESLint for code quality checks
 - `npm run start:tunnel` - Start the development server with tunnel for testing on physical devices
+- `npx tsc --noEmit` - Check TypeScript types without generating output files
+- `sh scripts/audit-imports.sh` - Audit and identify outdated import patterns
+- `sh scripts/test-new-screens.sh` - Test new screen structure for TypeScript errors
+- `sh scripts/remove-old-screens.sh` - Remove outdated screen files after migration
 
 ## App Concept
 This is a Darts Scorer App built with Expo and React Native. It features:
@@ -56,7 +60,7 @@ The dart game logic is structured as a composition of specialized hooks:
   5. End game with final statistics
 
 - **Game Variants**:
-  - X01: Standard countdown from starting score (301, 501, etc.)
+  - X01: Standard countdown from starting score (101, 201, 301, 501, 701)
   - Cricket: Mark numbers 15-20 and bullseye with different scoring modes
 
 ## Component Library Structure
@@ -135,7 +139,18 @@ EXPO_PUBLIC_SITE_URL=your_site_url
 ## Testing & Verification
 - TypeScript type checking: `npx tsc --noEmit`
 - ESLint for code quality: `npm run lint`
+- Specific component linting: `npx eslint "app/**/*.tsx" --quiet`
 - Manual testing on simulator and devices
+- Performance testing of animations with React Native Reanimated
 
 ## Migration Notes
-The codebase appears to be transitioning from an older structure to a new Expo Router-based architecture. Work with files in `/app` directory rather than legacy files in `/backup` directories.
+The codebase appears to be transitioning from an older structure to a new Expo Router-based architecture. Work with files in `/app` directory rather than legacy files in `/backup` or `/backup-old-components` directories. When making changes to existing features, ensure the changes follow the new file-based routing pattern in the `/app` directory.
+
+## Performance Optimization
+The app implements several performance optimizations:
+- Memoization of expensive calculations with useMemo and useCallback
+- React.memo for optimal re-rendering
+- Optimized animations using React Native Reanimated
+- Proper list virtualization for scrollable content
+- Efficient state management with Zustand
+- Shared element transitions between screens

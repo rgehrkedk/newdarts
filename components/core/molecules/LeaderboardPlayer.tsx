@@ -28,6 +28,8 @@ interface LeaderboardPlayerProps {
   activeVariant?: 'primary' | 'secondary' | 'avatar' | 'neutral'; // Variant when pressed (defaults to avatar)
   activeOpacity?: number; // Opacity level when pressed (0-1)
   transitionDuration?: number; // Duration of transition in ms
+  isPressable?: boolean; // Whether the component should be pressable and open overlay (default: true)
+  showRank?: boolean; // Whether to show the rank number (default: true)
 }
 
 export function LeaderboardPlayer({
@@ -39,7 +41,9 @@ export function LeaderboardPlayer({
   variant = 'neutral',
   activeVariant = 'avatar',
   activeOpacity = 0.1,
-  transitionDuration = 150
+  transitionDuration = 150,
+  isPressable = true,
+  showRank = true
 }: LeaderboardPlayerProps) {
   const colors = useThemeColors();
   const cardRef = useRef<View>(null);
@@ -113,8 +117,10 @@ export function LeaderboardPlayer({
 
   // Handle press to show our overlay without calling the external onPress
   const handlePress = () => {
-    // Just show our overlay without triggering external handlers
-    setShowOverlay(true);
+    if (isPressable) {
+      // Only show overlay if the component is pressable
+      setShowOverlay(true);
+    }
   };
 
   // Handler to close the overlay
@@ -126,24 +132,26 @@ export function LeaderboardPlayer({
   const CardContent = () => (
     <View style={styles.innerContainer}>
       <View style={styles.rankAndContent}>
-        <Animated.View 
-          style={[
-            styles.rankContainer, 
-            { backgroundColor: index < 3 ? `${player.color}30` : 'transparent' }
-          ]}
-          sharedTransitionTag={`rank-${player.id}`}
-        >
-          <Text 
-            weight="semibold" 
-            size="lg" 
+        {showRank && (
+          <Animated.View
             style={[
-              styles.rankText, 
-              { color: index < 3 ? player.color : colors.text.secondary }
+              styles.rankContainer,
+              { backgroundColor: index < 3 ? `${player.color}30` : 'transparent' }
             ]}
+            sharedTransitionTag={`rank-${player.id}`}
           >
-            {index + 1}
-          </Text>
-        </Animated.View>
+            <Text
+              weight="semibold"
+              size="lg"
+              style={[
+                styles.rankText,
+                { color: index < 3 ? player.color : colors.text.secondary }
+              ]}
+            >
+              {index + 1}
+            </Text>
+          </Animated.View>
+        )}
 
         <View style={styles.content}>
           <Animated.View 
@@ -213,9 +221,9 @@ export function LeaderboardPlayer({
       style={animatedStyle}
     >
       <TouchableWithoutFeedback
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        onPress={handlePress}
+        onPressIn={isPressable ? handlePressIn : undefined}
+        onPressOut={isPressable ? handlePressOut : undefined}
+        onPress={isPressable ? handlePress : undefined}
       >
         <View
           ref={cardRef}

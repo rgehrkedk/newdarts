@@ -6,12 +6,13 @@ import { Text } from '@core/atoms/Text';
 import { StatItem } from '@core/atoms/StatItem';
 import { Avatar } from '@core/atoms/Avatar';
 import { Trophy, Target, Award, Crown, Hash, Percent, Zap, Timer, BarChart3 } from 'lucide-react-native';
-import { SavedPlayer } from '@/types/game';
+import { SavedPlayer, SortCategory } from '@/types/game';
 import { GradientCard } from '@core/molecules/GradientCard';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { X } from 'lucide-react-native';
 import { IconButton } from '@core/atoms/IconButton';
+import { LeaderboardPlayer } from '@core/molecules/LeaderboardPlayer';
 
 interface PlayerOverlayProps {
   player: SavedPlayer & { rank?: number };
@@ -45,7 +46,7 @@ export function PlayerOverlay({ player, onClose }: PlayerOverlayProps) {
         variant="avatar"
         avatarColor={player.color}
         avatarGradientColor={player.color}
-        height={560}
+        height={700}
         borderRadius={layout.radius.xl}
         style={styles.card}
       >
@@ -60,10 +61,23 @@ export function PlayerOverlay({ player, onClose }: PlayerOverlayProps) {
         </View>
 
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
-          {/* Header with player info */}
-          <View style={styles.header}>
+          {/* LeaderboardPlayer at the top */}
+          <View style={styles.leaderboardPlayerContainer}>
+            <LeaderboardPlayer
+              player={player}
+              index={player.rank ? player.rank - 1 : 0}
+              sortBy={(player.gameAvg ? 'average' : 'games') as SortCategory}
+              variant="primary"
+              clean={true}
+              isPressable={false}
+              showRank={false}
+            />
+          </View>
+
+          {/* Header with player info - kept for shared transition elements */}
+          <View style={[styles.header, { opacity: 0, height: 0, overflow: 'hidden', marginBottom: 0 }]}>
             <View style={styles.playerInfoContainer}>
-              <Animated.View 
+              <Animated.View
                 style={styles.avatarContainer}
                 sharedTransitionTag={`avatar-container-${player.id}`}
               >
@@ -74,9 +88,9 @@ export function PlayerOverlay({ player, onClose }: PlayerOverlayProps) {
                   sharedTransitionTag={`avatar-${player.id}`}
                 />
               </Animated.View>
-              
+
               <View style={styles.nameContainer}>
-                <Animated.Text 
+                <Animated.Text
                   style={[styles.playerName, { color: colors.text.primary }]}
                   sharedTransitionTag={`name-${player.id}`}
                 >
@@ -88,17 +102,17 @@ export function PlayerOverlay({ player, onClose }: PlayerOverlayProps) {
               </View>
 
               {player.rank && (
-                <Animated.View 
+                <Animated.View
                   style={[
-                    styles.rankBadge, 
+                    styles.rankBadge,
                     { backgroundColor: player.rank <= 3 ? `${player.color}30` : colors.background.secondary }
                   ]}
                   sharedTransitionTag={`rank-${player.id}`}
                 >
-                  <Text 
-                    weight="semibold" 
+                  <Text
+                    weight="semibold"
                     style={[
-                      styles.rankText, 
+                      styles.rankText,
                       { color: player.rank <= 3 ? player.color : colors.text.secondary }
                     ]}
                   >
@@ -259,6 +273,9 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingTop: spacing.xl + spacing.md, // Extra padding to account for close button
     gap: spacing.xl,
+  },
+  leaderboardPlayerContainer: {
+    marginBottom: spacing.lg,
   },
   header: {
     marginBottom: spacing.md,

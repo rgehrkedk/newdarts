@@ -64,8 +64,8 @@ export function GradientCard({
   const themeColors = useThemeColors();
   
   // Get default values from the theme
-  innerTransparency = innerTransparency || themeColors.transparency.mediumLow; // Default 70% opacity
-  outerTransparency = outerTransparency || themeColors.transparency.full; // Default 100% opacity
+  innerTransparency = innerTransparency || themeColors.transparency.high; // Default 70% opacity
+  outerTransparency = outerTransparency || themeColors.transparency.low; // Default 100% opacity
 
   // Helper function to apply transparency to a color
   const applyTransparency = (color: string, transparency: string): string => {
@@ -257,7 +257,7 @@ export function GradientCard({
               styles.card,
               {
                 backgroundColor: innerBackgroundColor ||
-                  (themeColors.background.primary + innerTransparency), // Use provided transparency
+                  (themeColors.background.secondary + innerTransparency), // Use provided transparency
                 height: height,
                 margin: cardInnerMargin,
                 borderRadius: innerBorderRadius
@@ -270,7 +270,7 @@ export function GradientCard({
               style={[
                 styles.overlay,
                 {
-                  backgroundColor: overlayColor || themeColors.background.overlay,
+                  backgroundColor: overlayColor || themeColors.background.primary,
                   borderRadius: innerBorderRadius
                 }
               ]}
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
   },
   card: {
     overflow: 'hidden',
-    backdropFilter: 'blur(20px)',
+    backdropFilter: 'blur(99px)',
   },
   // Clean version styles
   cleanCard: {
