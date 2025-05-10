@@ -4,9 +4,21 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Text } from '@core/atoms/Text';
 import { useThemeColors } from '@/constants/theme/colors';
 import { spacing, layout } from '@/constants/theme';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, { FadeIn, SharedTransition, withTiming } from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { useTheme } from '@/hooks/useTheme';
+
+// Define custom slow and fluid shared transition
+const customTransition = SharedTransition.custom((values) => {
+  'worklet';
+  return {
+    width: withTiming(values.targetWidth, { duration: 1500 }),
+    height: withTiming(values.targetHeight, { duration: 1500 }),
+    originX: withTiming(values.targetOriginX, { duration: 1500 }),
+    originY: withTiming(values.targetOriginY, { duration: 1500 }),
+    borderRadius: withTiming(values.targetBorderRadius, { duration: 1500 }),
+  };
+});
 
 interface AvatarProps {
   /**
@@ -181,16 +193,17 @@ export function Avatar({
   const TextElement = ({ children }: { children: React.ReactNode }) => {
     if (sharedTransitionTag) {
       return (
-        <Animated.Text 
+        <Animated.Text
           sharedTransitionTag={`avatar-text-${sharedTransitionTag}`}
           style={[dynamicStyles.text, textStyle]}
+          sharedTransitionStyle={customTransition}
         >
           {children}
         </Animated.Text>
       );
     }
     return (
-      <Text 
+      <Text
         weight="semibold"
         style={[dynamicStyles.text, textStyle]}
       >
@@ -260,70 +273,17 @@ export function Avatar({
       android_ripple: { color: 'rgba(0,0,0,0.1)', borderless: true }
     } : { style: styles.pressable };
     
-    return (
-      <Wrapper>
-        <Container {...containerProps}>
-          {/* Outer gradient with avatar color */}
-          <LinearGradient
-            colors={[
-              `${color}${colors.transparency.medium}`,
-              `${defaultGradientColor}${colors.transparency.veryLow}`
-            ]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.gradientContainer}
-          >
-            <View style={styles.innerWrapper}>
-              {/* Enhanced blur effect in inner wrapper */}
-              <InnerBlurWrapper>
-                <LinearGradient
-                  colors={[neutralGradientStart, neutralGradientEnd]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={[
-                    styles.avatarContent,
-                    { 
-                      backgroundColor: isDark 
-                        ? `rgba(255, 255, 255, 0.1)` 
-                        : `rgba(0, 0, 0, 0.05)`
-                    }
-                  ]}
-                >
-                  <TextElement>{getInitials()}</TextElement>
-                </LinearGradient>
-              </InnerBlurWrapper>
-            </View>
-          </LinearGradient>
-        </Container>
-      </Wrapper>
-    );
-  }
-  
-  // Simple colored circle (fallback)
-  // Use the same neutral gradient colors for consistency with transparency
-  const neutralGradientStart = isDark 
-    ? `${colors.background.primary}${colors.transparency.low}` // Dark theme start
-    : `${colors.background.primary}${colors.transparency.high}`; // Light theme start
-  const neutralGradientEnd = isDark 
-    ? `${colors.background.primary}${colors.transparency.low}` // Dark theme end
-    : `${colors.background.tertiary}${colors.transparency.low}`; // Light theme end
-  
-  const Container = onPress ? Pressable : View;
-  const containerProps = onPress ? {
-    onPress,
-    style: ({ pressed }) => [styles.pressable, pressed && styles.pressed],
-    android_ripple: { color: 'rgba(0,0,0,0.1)', borderless: true }
-  } : { style: styles.pressable };
-  
-  return (
-    <Wrapper>
+    const avatarContent = (
       <Container {...containerProps}>
-        {/* Single colored background */}
-        <View 
-          style={[
-            styles.gradientContainer, 
-            { backgroundColor: `${color}${colors.transparency.high}` }
+        {/* Outer gradient with avatar color */}
+        <LinearGradient
+          colors={[
+            `${color}${colors.transparency.medium}`,
+            `${defaultGradientColor}${colors.transparency.veryLow}`
           ]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.gradientContainer}
         >
           <View style={styles.innerWrapper}>
             {/* Enhanced blur effect in inner wrapper */}
@@ -345,8 +305,95 @@ export function Avatar({
               </LinearGradient>
             </InnerBlurWrapper>
           </View>
-        </View>
+        </LinearGradient>
       </Container>
+    );
+    
+    // Add support for shared transition
+    if (sharedTransitionTag) {
+      return (
+        <Animated.View
+          sharedTransitionTag={`avatar-${sharedTransitionTag}`}
+          style={[dynamicStyles.container, style]}
+          sharedTransitionStyle={customTransition}
+        >
+          {avatarContent}
+        </Animated.View>
+      );
+    }
+    
+    return (
+      <Wrapper>
+        {avatarContent}
+      </Wrapper>
+    );
+  }
+  
+  // Simple colored circle (fallback)
+  // Use the same neutral gradient colors for consistency with transparency
+  const neutralGradientStart = isDark 
+    ? `${colors.background.primary}${colors.transparency.low}` // Dark theme start
+    : `${colors.background.primary}${colors.transparency.high}`; // Light theme start
+  const neutralGradientEnd = isDark 
+    ? `${colors.background.primary}${colors.transparency.low}` // Dark theme end
+    : `${colors.background.tertiary}${colors.transparency.low}`; // Light theme end
+  
+  const Container = onPress ? Pressable : View;
+  const containerProps = onPress ? {
+    onPress,
+    style: ({ pressed }) => [styles.pressable, pressed && styles.pressed],
+    android_ripple: { color: 'rgba(0,0,0,0.1)', borderless: true }
+  } : { style: styles.pressable };
+  
+  const avatarContent = (
+    <Container {...containerProps}>
+      {/* Single colored background */}
+      <View 
+        style={[
+          styles.gradientContainer, 
+          { backgroundColor: `${color}${colors.transparency.high}` }
+        ]}
+      >
+        <View style={styles.innerWrapper}>
+          {/* Enhanced blur effect in inner wrapper */}
+          <InnerBlurWrapper>
+            <LinearGradient
+              colors={[neutralGradientStart, neutralGradientEnd]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[
+                styles.avatarContent,
+                { 
+                  backgroundColor: isDark 
+                    ? `rgba(255, 255, 255, 0.1)` 
+                    : `rgba(0, 0, 0, 0.05)`
+                }
+              ]}
+            >
+              <TextElement>{getInitials()}</TextElement>
+            </LinearGradient>
+          </InnerBlurWrapper>
+        </View>
+      </View>
+    </Container>
+  );
+  
+  // Add support for shared transition
+  if (sharedTransitionTag) {
+    return (
+      <Animated.View
+        sharedTransitionTag={`avatar-${sharedTransitionTag}`}
+        style={[dynamicStyles.container, style]}
+        sharedTransitionStyle={customTransition}
+      >
+        {avatarContent}
+      </Animated.View>
+    );
+  }
+  
+  return (
+    <Wrapper>
+      {avatarContent}
     </Wrapper>
   );
 }

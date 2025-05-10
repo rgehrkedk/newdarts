@@ -10,6 +10,7 @@ import { View, StyleSheet, TouchableOpacity, useWindowDimensions, BackHandler, S
 import { spacing, layout } from '@/constants/theme';
 import { useThemeColors } from '@/constants/theme/colors';
 import { Avatar } from '@core/atoms/Avatar';
+import { ExpandedAvatar } from '@core/atoms/ExpandedAvatar';
 import { Text } from '@core/atoms/Text';
 import { SavedPlayer } from '@/types/game';
 import { X } from 'lucide-react-native';
@@ -36,22 +37,22 @@ import { PlayerStatsContent } from '../PlayerStats';
 const ANIMATION_CONFIG = {
   // Main expansion stages
   PHASES: {
-    INITIAL_PAUSE: 100,          // Brief pause before starting
-    EXPANSION_DURATION: 1500,    // Very slow expansion to full screen
-    CONTENT_START_DELAY: 600,    // When content starts fading in
-    CONTENT_FADE_DURATION: 800,  // How long content takes to fade in
+    INITIAL_PAUSE: 150,          // Brief pause before starting
+    EXPANSION_DURATION: 2500,    // Very slow expansion to full screen (increased)
+    CONTENT_START_DELAY: 900,    // When content starts fading in (increased)
+    CONTENT_FADE_DURATION: 1200, // How long content takes to fade in (increased)
   },
-  
+
   // Easing functions
   EASING: {
-    EXPANSION: Easing.bezier(0.2, 0.01, 0.15, 1), // Very slow start, then accelerate
-    CONTENT: Easing.bezier(0, 0.55, 0.45, 1),     // Ease-in-out for content
+    EXPANSION: Easing.bezier(0.1, 0, 0.1, 1),  // Very slow, gentle curve
+    CONTENT: Easing.bezier(0, 0.55, 0.45, 1),  // Ease-in-out for content
   },
-  
+
   // Closing animation
   CLOSE: {
-    CONTENT_FADE: 200,          // Fade out content first
-    COLLAPSE_DURATION: 450,     // Collapse back to original position
+    CONTENT_FADE: 300,           // Fade out content first (increased)
+    COLLAPSE_DURATION: 800,      // Collapse back to original position (increased)
   }
 };
 
@@ -92,8 +93,6 @@ export function PlayerStatsOverlay({
   const contentOpacity = useSharedValue(0);
   const backdropOpacity = useSharedValue(0);
   const avatarScale = useSharedValue(1);
-  const cardExpansion = useSharedValue(0); // Controls avatar-to-card expansion
-  const cardOpacity = useSharedValue(0);   // Controls card content visibility
   
   // Gesture values
   const translateY = useSharedValue(0);
@@ -109,8 +108,6 @@ export function PlayerStatsOverlay({
       contentOpacity.value = 0;
       backdropOpacity.value = 0;
       avatarScale.value = 1;
-      cardExpansion.value = 0;
-      cardOpacity.value = 0;
       translateY.value = 0;
     }
   }, [player]);
@@ -176,25 +173,22 @@ export function PlayerStatsOverlay({
     if (isVisible && player) {
       console.log(`Animation starting for player ${player.id}, reset state: ${isNewPlayer}`);
       
-      // CRITICAL: Explicitly reset ALL animation values to their initial state
-      // This ensures we get a fresh animation each time, even with different players
+      // Reset animation values to their initial state
       progress.value = 0;
       contentOpacity.value = 0;
       backdropOpacity.value = 0;
       avatarScale.value = 1;
-      cardExpansion.value = 0;
-      cardOpacity.value = 0;
       translateY.value = 0;
-      
+
       // Small delay before starting animation
       const startDelay = ANIMATION_CONFIG.PHASES.INITIAL_PAUSE;
-      
-      // Start backdrop fade immediately
+
+      // Start backdrop fade immediately but make it slower
       backdropOpacity.value = withTiming(1, {
-        duration: 500,
-        easing: Easing.out(Easing.cubic),
+        duration: 1000, // Longer duration
+        easing: Easing.bezier(0.2, 0.0, 0.2, 1), // Smoother easing
       });
-      
+
       // Begin main expansion animation
       progress.value = withDelay(
         startDelay,
@@ -203,34 +197,16 @@ export function PlayerStatsOverlay({
           easing: ANIMATION_CONFIG.EASING.EXPANSION,
         })
       );
-      
-      // Scale avatar slightly for visual effect (with a bounce)
+
+      // Scale avatar gently for a smooth transition
       avatarScale.value = withDelay(
-        startDelay + 200,
-        withTiming(1.2, {
-          duration: 700,
-          easing: Easing.bezier(0.34, 1.56, 0.64, 1), // Bouncy effect
-        })
-      );
-      
-      // Animate avatar to card expansion
-      cardExpansion.value = withDelay(
         startDelay + 300,
-        withTiming(1, {
-          duration: 800,
-          easing: Easing.bezier(0.22, 1, 0.36, 1),
+        withTiming(1.05, {  // Reduced scale for more subtle effect
+          duration: 1500,   // Slower animation
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1), // More gentle easing
         })
       );
-      
-      // Fade in card content
-      cardOpacity.value = withDelay(
-        startDelay + 600,
-        withTiming(1, {
-          duration: 600,
-          easing: Easing.bezier(0, 0, 0.2, 1),
-        })
-      );
-      
+
       // Fade in main content after expansion is underway
       contentOpacity.value = withDelay(
         startDelay + ANIMATION_CONFIG.PHASES.CONTENT_START_DELAY,
@@ -249,40 +225,26 @@ export function PlayerStatsOverlay({
       cancelAnimation(contentOpacity);
       cancelAnimation(backdropOpacity);
       cancelAnimation(avatarScale);
-      cancelAnimation(cardExpansion);
-      cancelAnimation(cardOpacity);
-      
+
       // Check if being dragged and let the gesture handler handle it
       if (translateY.value > SCREEN_HEIGHT * 0.1) {
         return;
       }
-      
+
       // Normal closing animation sequence
-      
+
       // First hide content
-      contentOpacity.value = withTiming(0, { 
+      contentOpacity.value = withTiming(0, {
         duration: ANIMATION_CONFIG.CLOSE.CONTENT_FADE,
         easing: Easing.out(Easing.quad),
       });
-      
-      // Fade out card content
-      cardOpacity.value = withTiming(0, {
-        duration: 300,
-        easing: Easing.bezier(0.4, 0, 1, 1),
-      });
-      
-      // Collapse card back to avatar
-      cardExpansion.value = withTiming(0, {
-        duration: ANIMATION_CONFIG.CLOSE.COLLAPSE_DURATION - 100,
-        easing: Easing.bezier(0.4, 0, 1, 1),
-      });
-      
-      // Scale avatar back to original size
+
+      // Scale avatar back to original size with a smoother transition
       avatarScale.value = withDelay(
-        100,
+        150, // Slightly longer delay
         withTiming(1, {
-          duration: ANIMATION_CONFIG.CLOSE.COLLAPSE_DURATION - 100,
-          easing: Easing.bezier(0.4, 0, 1, 1),
+          duration: ANIMATION_CONFIG.CLOSE.COLLAPSE_DURATION, // Full duration
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1), // Gentle easing curve
         })
       );
       
@@ -297,17 +259,17 @@ export function PlayerStatsOverlay({
         }
       });
       
-      // Fade out backdrop
+      // Fade out backdrop more slowly
       backdropOpacity.value = withTiming(0, {
-        duration: ANIMATION_CONFIG.CLOSE.COLLAPSE_DURATION,
-        easing: Easing.bezier(0.4, 0, 1, 1),
+        duration: ANIMATION_CONFIG.CLOSE.COLLAPSE_DURATION + 300, // Even longer duration
+        easing: Easing.bezier(0.2, 0.0, 0.2, 1), // Same smooth curve
       });
       
       // Reset drag position
       translateY.value = withTiming(0, { duration: 300 });
     }
-  }, [isVisible, player, progress, contentOpacity, backdropOpacity, translateY, 
-      avatarScale, cardExpansion, cardOpacity, onClose, onAnimationComplete, isNewPlayer, SCREEN_HEIGHT]);
+  }, [isVisible, player, progress, contentOpacity, backdropOpacity, translateY,
+      avatarScale, onClose, onAnimationComplete, isNewPlayer, SCREEN_HEIGHT]);
   
   // Handle status bar appearance
   useEffect(() => {
@@ -344,10 +306,10 @@ export function PlayerStatsOverlay({
   // Modal container style with proper dragging support
   const modalStyle = useAnimatedStyle(() => {
     // Use default values if position data is missing
-    const hasValidPosition = itemPosition && 
-                           itemPosition.x !== undefined && 
+    const hasValidPosition = itemPosition &&
+                           itemPosition.x !== undefined &&
                            itemPosition.y !== undefined;
-    
+
     // Starting position
     const initialX = hasValidPosition ? itemPosition!.x : SCREEN_WIDTH / 2 - 150;
     const initialY = hasValidPosition ? itemPosition!.y : SCREEN_HEIGHT - 200;
@@ -359,20 +321,20 @@ export function PlayerStatsOverlay({
     const targetY = insets.top;
     const targetWidth = SCREEN_WIDTH;
     const targetHeight = SCREEN_HEIGHT - insets.top - 10;
-    
-    // Use intermediate keyframes for more interesting motion
+
+    // Use more keyframes for a smoother, more fluid animation
     return {
       position: 'absolute',
       left: interpolate(
         progress.value,
-        [0, 0.2, 1],  // Add intermediate keyframe for a more dynamic expansion
-        [initialX, initialX * 0.9, targetX],
+        [0, 0.15, 0.3, 0.5, 1],  // More keyframes for smoother movement
+        [initialX, initialX * 0.95, initialX * 0.8, initialX * 0.4, targetX],
         Extrapolate.CLAMP
       ),
       top: interpolate(
         progress.value,
-        [0, 0.3, 1],
-        [initialY, initialY * 0.8, targetY],
+        [0, 0.2, 0.4, 0.6, 1],
+        [initialY, initialY * 0.9, initialY * 0.7, initialY * 0.4, targetY],
         Extrapolate.CLAMP
       ),
       // Apply drag offset
@@ -381,38 +343,38 @@ export function PlayerStatsOverlay({
       ],
       width: interpolate(
         progress.value,
-        [0, 0.4, 1],
-        [initialWidth, SCREEN_WIDTH * 0.8, targetWidth],
+        [0, 0.2, 0.5, 0.8, 1],
+        [initialWidth, initialWidth * 1.5, SCREEN_WIDTH * 0.6, SCREEN_WIDTH * 0.9, targetWidth],
         Extrapolate.CLAMP
       ),
       height: interpolate(
         progress.value,
-        [0, 0.5, 1],
-        [initialHeight, SCREEN_HEIGHT * 0.5, targetHeight],
+        [0, 0.3, 0.6, 0.8, 1],
+        [initialHeight, initialHeight * 2, SCREEN_HEIGHT * 0.4, SCREEN_HEIGHT * 0.7, targetHeight],
         Extrapolate.CLAMP
       ),
       borderTopLeftRadius: interpolate(
         progress.value,
-        [0, 1],
-        [layout.radius.lg, 20],
+        [0, 0.5, 1],
+        [layout.radius.lg, layout.radius.lg * 0.8, 20],
         Extrapolate.CLAMP
       ),
       borderTopRightRadius: interpolate(
         progress.value,
-        [0, 1],
-        [layout.radius.lg, 20],
+        [0, 0.5, 1],
+        [layout.radius.lg, layout.radius.lg * 0.8, 20],
         Extrapolate.CLAMP
       ),
       borderBottomLeftRadius: interpolate(
         progress.value,
-        [0, 0.7, 1],
-        [layout.radius.lg, 10, 0],
+        [0, 0.5, 0.8, 1],
+        [layout.radius.lg, layout.radius.lg * 0.8, 10, 0],
         Extrapolate.CLAMP
       ),
       borderBottomRightRadius: interpolate(
         progress.value,
-        [0, 0.7, 1],
-        [layout.radius.lg, 10, 0],
+        [0, 0.5, 0.8, 1],
+        [layout.radius.lg, layout.radius.lg * 0.8, 10, 0],
         Extrapolate.CLAMP
       ),
       shadowColor: '#000',
@@ -466,95 +428,15 @@ export function PlayerStatsOverlay({
     };
   });
 
-  // Avatar card container style - transforms from avatar to card
-  const avatarCardContainerStyle = useAnimatedStyle(() => {
-    const fullWidth = SCREEN_WIDTH ;
+  // Avatar wrapper scale animation
+  const avatarWrapperStyle = useAnimatedStyle(() => {
     return {
-      width: interpolate(
-        cardExpansion.value,
-        [0, 1],
-        [64, fullWidth], // Expand width to fit player info
-        Extrapolate.CLAMP
-      ),
-      height: interpolate(
-        cardExpansion.value,
-        [0, 1],
-        [48, 80], // Slight height increase
-        Extrapolate.CLAMP
-      ),
-      borderRadius: interpolate(
-        cardExpansion.value,
-        [0, 1],
-        [99, 32], // Transform from circle to rounded rectangle
-        Extrapolate.CLAMP
-      ),
-      position: 'relative',
-      overflow: 'hidden',
-      marginRight: interpolate(
-        cardExpansion.value,
-        [0, 1],
-        [0, 0],
-        Extrapolate.CLAMP
-      ),
       transform: [
         { scale: avatarScale.value }
-      ],
+      ]
     };
   });
-  
-  // Avatar container style - keeps avatar positioned within the expanding card
-  const avatarInCardStyle = useAnimatedStyle(() => {
-    return {
-      position: 'absolute',
-      left: 32,
-      top: 0,
-      
-      borderRadius: interpolate(
-        cardExpansion.value,
-        [0, 1],
-        [32, 16], // Match the container's border radius
-        Extrapolate.CLAMP
-      ),
-      overflow: 'hidden',
-    };
-  });
-  
-  // Card content style - fades in as the card expands
-  const cardContentStyle = useAnimatedStyle(() => {
-    return {
-      opacity: cardOpacity.value,
-      position: 'absolute',
-      left: 104, // Position to the right of the avatar
-      right: 0,
-      top: 0,
-      bottom: 0,
-      justifyContent: 'center',
-    };
-  });
-  
-  // Card background gradient style
-  const cardGradientStyle = useAnimatedStyle(() => {
-    return {
-      position: 'absolute',
-      top: 12,
-      left: 32,
-      right: 64,
-      bottom: 12,
-      borderRadius: interpolate(
-        cardExpansion.value,
-        [0, 1],
-        [32, 16],
-        Extrapolate.CLAMP
-      ),
-      overflow: 'hidden', // Important: add overflow hidden to make borderRadius work
-      opacity: interpolate(
-        cardExpansion.value,
-        [0, 0.3, 1],
-        [0, 0.7, 1],
-        Extrapolate.CLAMP
-      ),
-    };
-  });
+
 
   // Header style for player info that animates from the leaderboard item
   const headerStyle = useAnimatedStyle(() => {
@@ -613,28 +495,9 @@ export function PlayerStatsOverlay({
     );
   }
   
-  // Calculate gradient colors from player color
-  const mainColor = player.color;
-  const gradientColor = player.color; // Or use a slightly different shade if you have one
-  
-  // Get transparency values
-  const transparencyMedium = colors.transparency?.medium || '80';
-  const transparencyLow = colors.transparency?.low || '30';
-  const transparencyVeryLow = colors.transparency?.veryLow || '10';
-  
-  // Neutral gradient for inner card
-  const neutralGradientStart = isDark 
-    ? `${colors.background.primary}${colors.transparency?.veryLow || '10'}` 
-    : `${colors.background.primary}${colors.transparency?.high || 'CC'}`;
-  
-  const neutralGradientEnd = isDark 
-    ? `${colors.background.tertiary}${colors.transparency?.faint || '05'}` 
-    : `${colors.background.tertiary}${colors.transparency?.low || '30'}`;
-  
   // Prepare shared elements for better animations
   const avatarTransitionTag = `avatar-${player.id}`;
   const nameTransitionTag = `name-${player.id}`;
-  const avatarContainerTag = `avatar-container-${player.id}`;
 
   return (
     <>
@@ -660,51 +523,19 @@ export function PlayerStatsOverlay({
             <View style={styles.headerContent}>
               {/* Enhanced avatar section with card transition */}
               <View style={styles.avatarSection}>
-                {/* Avatar card container that grows into a player card */}
-                <Animated.View 
-                  sharedTransitionTag={avatarContainerTag}
-                  style={[avatarCardContainerStyle]}
+                {/* Properly wrapped ExpandedAvatar for shared element transition */}
+                <Animated.View
+                  style={[styles.expandedAvatarWrapper, avatarWrapperStyle]}
                 >
-                  {/* Card background with gradient */}
-                  <Animated.View style={cardGradientStyle}>
-                    <LinearGradient
-                      colors={[
-                        `${mainColor}${transparencyMedium}`,
-                        `${gradientColor}${transparencyVeryLow}`
-                      ]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={StyleSheet.absoluteFill}
-                    />
-                  </Animated.View>
-                  
-                  {/* Avatar positioned inside the card */}
-                  <Animated.View style={avatarInCardStyle}>
-                    <Avatar
-                      name={player.name}
-                      color={player.color}
-                      size={64}
-                      sharedTransitionTag={avatarTransitionTag}
-                    />
-                  </Animated.View>
-                  
-                  {/* Card content that appears as the card expands */}
-                  <Animated.View style={cardContentStyle}>
-                    <Text style={styles.cardPlayerName} numberOfLines={1} weight="semibold">
-                      {player.name}
-                    </Text>
-                    <View style={styles.cardPlayerStats}>
-                      <View style={[styles.miniTag, { backgroundColor: player.color+'4D' }]}>
-                        <Text variant="primary" size="xxs">
-                          {player.isGuest ? 'Guest' : 'You'}
-                        </Text>
-                      </View>
-                      <Text variant="secondary" size="xxs">•</Text>
-                      <Text variant="primary" size="xxs">
-                        {player.gamesPlayed} {player.gamesPlayed === 1 ? 'Game' : 'Games'}
-                      </Text>
-                    </View>
-                  </Animated.View>
+                  <ExpandedAvatar
+                    name={player.name}
+                    color={player.color}
+                    expanded={true}
+                    gamesPlayed={player.gamesPlayed}
+                    isGuest={player.isGuest}
+                    sharedTransitionTag={avatarTransitionTag}
+                    withShadow={true}
+                  />
                 </Animated.View>
 
  
@@ -814,5 +645,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative',
     zIndex: 5,
+  },
+  expandedAvatarWrapper: {
+    // This helps with proper shared element animation
+    overflow: 'hidden',
+    borderRadius: 24, // Match expanded avatar's border radius
+    transform: [
+      { scale: 1 }  // Starting scale for the animation
+    ],
   },
 });

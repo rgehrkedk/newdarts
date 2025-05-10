@@ -15,15 +15,15 @@ interface LeaderboardItemProps {
   sortBy: SortCategory;
 }
 
-export function LeaderboardItem({ 
-  player, 
-  index, 
-  onPress, 
-  sortBy 
+export function LeaderboardItem({
+  player,
+  index,
+  onPress,
+  sortBy
 }: LeaderboardItemProps) {
   const colors = useThemeColors();
   const cardRef = useRef<View>(null);
-  
+
   // Flag to ensure we don't trigger multiple measurements
   const isMeasuring = useRef(false);
 
@@ -83,17 +83,17 @@ export function LeaderboardItem({
 
   const handlePress = () => {
     if (!onPress || !cardRef.current || isMeasuring.current) return;
-    
+
     // Set the measuring flag to prevent multiple measurements
     isMeasuring.current = true;
-    
+
     // Measure the card's position and dimensions
     // The setTimeout ensures the UI is fully rendered before measuring
     setTimeout(() => {
       if (cardRef.current) {
         cardRef.current.measure((x, y, width, height, pageX, pageY) => {
           console.log(`Measured position for player ${player.id}: x=${pageX}, y=${pageY}, width=${width}, height=${height}`);
-          
+
           // Pass measurements to parent component
           onPress(enhancedPlayer, {
             x: pageX,
@@ -101,7 +101,7 @@ export function LeaderboardItem({
             width,
             height
           });
-          
+
           // Reset the measuring flag
           isMeasuring.current = false;
         });
@@ -122,18 +122,18 @@ export function LeaderboardItem({
         }}
       >
         <View style={styles.rankAndContent}>
-          <Animated.View 
+          <Animated.View
             style={[
-              styles.rankContainer, 
+              styles.rankContainer,
               { backgroundColor: index < 3 ? `${player.color}30` : 'transparent' }
             ]}
             sharedTransitionTag={`rank-${player.id}`}
           >
-            <Text 
-              weight="semibold" 
-              size="lg" 
+            <Text
+              weight="semibold"
+              size="lg"
               style={[
-                styles.rankText, 
+                styles.rankText,
                 { color: index < 3 ? player.color : colors.text.secondary }
               ]}
             >
@@ -142,7 +142,7 @@ export function LeaderboardItem({
           </Animated.View>
 
           <View style={styles.content}>
-            <Animated.View 
+            <Animated.View
               style={styles.avatarWrapper}
               sharedTransitionTag={`avatar-container-${player.id}`}
             >
@@ -155,7 +155,7 @@ export function LeaderboardItem({
             </Animated.View>
 
             <View style={styles.textContainer}>
-              <Animated.Text 
+              <Animated.Text
                 style={[styles.name, { color: colors.text.primary }]}
                 sharedTransitionTag={`name-${player.id}`}
               >

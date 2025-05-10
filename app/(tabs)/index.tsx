@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { spacing, layout } from '@/constants/theme';
 import { useThemeColors } from '@/constants/theme/colors';
 import { Text } from '@core/atoms/Text';
+import { ExpandedAvatar } from '@core/atoms/ExpandedAvatar';
 import { GradientCard } from '@core/molecules/GradientCard';
 import { LeaderboardItem } from '@core/molecules/LeaderboardItem';
 import { PlayerStatsOverlay } from '@features/stats/components/PlayerStatsOverlay';
@@ -214,9 +215,21 @@ export default function Home() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Welcome Message */}
+        {/* Welcome Message with Expanded Avatar */}
         <Animated.View entering={FadeInDown.delay(100).duration(600)} style={styles.welcomeContainer}>
-          <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+          <View style={styles.welcomeHeader}>
+            {currentUserPlayer && (
+              <ExpandedAvatar
+                name={currentUserPlayer.name}
+                color={currentUserPlayer.color}
+                expanded={true}
+                gamesPlayed={currentUserPlayer.gamesPlayed || 0}
+                isGuest={!currentUserPlayer.user_id}
+                style={styles.expandedAvatar}
+              />
+            )}
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginTop: spacing.lg }}>
             <Text weight="light" variant="secondary" size="xxl" style={{ marginRight: 6 }}>Welcome back,</Text>
             <Text weight="bold" size="xxl">
               {players.find(player => player.user_id === session?.user?.id)?.name || 'Player'}
@@ -395,7 +408,28 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
   },
   welcomeContainer: {
+    marginBottom: spacing.lg,
+  },
+  welcomeHeader: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+  },
+  expandedAvatar: {
+    alignSelf: 'flex-start',
     marginBottom: spacing.md,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
 
   gameButtonsContainer: {
