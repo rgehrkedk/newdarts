@@ -9,7 +9,7 @@ interface AuthContextType {
   isLoading: boolean;
   error: string | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, displayName?: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -62,9 +62,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAuthError(err instanceof Error ? err : new Error('Authentication failed'));
       }
     },
-    signUp: async (email: string, password: string) => {
+    signUp: async (email: string, password: string, displayName?: string) => {
       try {
-        await signUp(email, password);
+        await signUp(email, password, displayName);
       } catch (err) {
         setAuthError(err instanceof Error ? err : new Error('Registration failed'));
       }

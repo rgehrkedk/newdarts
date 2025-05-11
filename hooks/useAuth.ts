@@ -40,29 +40,29 @@ const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  signUp: async (email: string, password: string) => {
+  signUp: async (email: string, password: string, displayName?: string) => {
     set({ isLoading: true, error: null });
     try {
       const { data: { user }, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
       });
-      
+
       if (signUpError) throw signUpError;
       if (!user) throw new Error('No user returned after signup');
 
-      // Create profile for new user
+      // Create profile for new user, using display name if provided
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
           id: user.id,
           username: email.split('@')[0],
-          display_name: null,
+          display_name: displayName || null,
           avatar_url: null,
         });
 
       if (profileError) throw profileError;
-      
+
       router.replace('/(tabs)');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to sign up';
