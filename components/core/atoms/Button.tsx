@@ -2,11 +2,12 @@ import { TouchableOpacity, StyleSheet, ViewStyle, ActivityIndicator, View, Press
 import { spacing, layout, typography } from '@/constants/theme';
 import { useThemeColors } from '@/constants/theme/colors';
 import { Video as LucideIcon } from 'lucide-react-native';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import { useTheme } from '@/hooks/useTheme';
 import { Text } from './Text';
+import haptics from '@/utils/haptics';
 
 /**
  * Button component with various styling variants
@@ -44,9 +45,9 @@ interface ButtonProps {
   };
 }
 
-export function Button({ 
-  onPress, 
-  label, 
+export function Button({
+  onPress,
+  label,
   variant = 'primary',
   icon: Icon,
   disabled = false,
@@ -62,6 +63,43 @@ export function Button({
   }
   const colors = useThemeColors();
   const { isDark } = useTheme();
+
+  // Animation setup
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: scale.value }]
+    };
+  });
+
+  const handlePressIn = () => {
+    scale.value = withTiming(0.97, { duration: 100 });
+    haptics.lightImpact();
+  };
+
+  const handlePressOut = () => {
+    scale.value = withTiming(1, { duration: 100 });
+  };
+
+  const handlePress = () => {
+    if (!disabled && !loading) {
+      // Custom haptic feedback based on button variant
+      if (variant === 'primary' || variant === 'gradient-border-primary') {
+        haptics.selectionFeedback();
+      } else if (variant === 'secondary' || variant === 'gradient-border-secondary') {
+        haptics.lightImpact();
+      } else if (variant === 'error') {
+        haptics.errorFeedback();
+      } else if (variant === 'ghost') {
+        haptics.subtleFeedback();
+      } else {
+        haptics.selectionFeedback();
+      }
+
+      onPress();
+    }
+  };
 
   const getBackgroundColor = () => {
     if (disabled) return colors.background.tertiary;
@@ -105,19 +143,21 @@ export function Button({
     }
   };
   
-  // Keep for color icons
+  // Get text color for both the icon and text
   const getTextColor = () => {
     if (disabled) return colors.text.secondary;
     switch (variant) {
       case 'error':
       case 'primary':
-      case 'gradient-border-primary':
         return colors.text.onPrimary;
+      case 'gradient-border-primary':
+        return colors.text.onPrimaryGradient;
       case 'ghost':
         return colors.text.onGhost;
       case 'secondary':
         return colors.text.onSecondary;
       case 'gradient-border-secondary':
+        return colors.text.onSecondaryGradient;
       case 'gradient-border-mix':
         return colors.text.primary;
       default:
@@ -164,97 +204,90 @@ export function Button({
     ];
 
     return (
-      <Animated.View entering={FadeIn}>
-        <LinearGradient
-          colors={borderGradientColors}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[styles.gradientContainer, style]}
+      <Animated.View entering={FadeIn} style={[animatedStyle, style]}>
+        <TouchableOpacity
+          onPress={handlePress}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          disabled={disabled || loading}
+          activeOpacity={0.7}
         >
-          <View style={styles.blurContainer}>
-            <LinearGradient
-              colors={innerGradientBackgroundColors}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.innerGradient}
-            >
-              <BlurView 
-                tint={isDark ? 'dark' : 'light'} 
-                intensity={isDark ? 55  : 55}
-                style={styles.blurEffect}
+          <LinearGradient
+            colors={borderGradientColors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradientContainer}
+          >
+            <View style={styles.blurContainer}>
+              <LinearGradient
+                colors={innerGradientBackgroundColors}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.innerGradient}
               >
-                <Pressable
-                  onPress={onPress}
-                  disabled={disabled || loading}
-                  style={styles.gradientButton}
-                  android_ripple={android_ripple || { color: 'rgba(0,0,0,0.05)', borderless: false }}
+                <BlurView
+                  tint={isDark ? 'dark' : 'light'}
+                  intensity={isDark ? 55  : 55}
+                  style={styles.blurEffect}
                 >
-                  {loading ? (
-                    <ActivityIndicator color={getTextColor()} />
-                  ) : (
-                    <>
-                      {Icon && <Icon size={20} color={getTextColor()} />}
-                      <Text 
-              size="md" 
-              weight="semibold" 
-              variant={getTextVariant()} 
-              style={
-                (variant === 'primary' || variant === 'error' || variant === 'gradient-border-primary') ? 
-                { color: colors.text.onPrimary } : 
-                variant === 'secondary' ? 
-                { color: colors.text.onSecondary } : 
-                undefined
-              }
-            >
-              {label}
-            </Text>
-                    </>
-                  )}
-                </Pressable>
-              </BlurView>
-            </LinearGradient>
-          </View>
-        </LinearGradient>
+                  <View style={styles.gradientButton}>
+                    {loading ? (
+                      <ActivityIndicator color={getTextColor()} />
+                    ) : (
+                      <>
+                        {Icon && <Icon size={20} color={getTextColor()} />}
+                        <Text
+                size="md"
+                weight="semibold"
+                variant={getTextVariant()}
+                style={{ color: getTextColor() }}
+              >
+                {label}
+              </Text>
+                      </>
+                    )}
+                  </View>
+                </BlurView>
+              </LinearGradient>
+            </View>
+          </LinearGradient>
+        </TouchableOpacity>
       </Animated.View>
     );
   }
 
   // Render standard button
   return (
-    <Animated.View entering={FadeIn}>
-      <Pressable
-        onPress={onPress}
+    <Animated.View entering={FadeIn} style={animatedStyle}>
+      <TouchableOpacity
+        onPress={handlePress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
         disabled={disabled || loading}
+        activeOpacity={0.7}
         style={[
           styles.button,
           { backgroundColor: getBackgroundColor() },
           variant === 'ghost' && styles.ghostButton,
           style
         ]}
-        android_ripple={android_ripple || { color: 'rgba(0,0,0,0.05)', borderless: false }}
       >
         {loading ? (
           <ActivityIndicator color={getTextColor()} />
         ) : (
           <>
             {Icon && <Icon size={20} color={getTextColor()} />}
-            <Text 
-              size="md" 
-              weight="semibold" 
-              variant={getTextVariant()} 
-              style={
-                (variant === 'primary' || variant === 'error' || variant === 'gradient-border-primary') ? 
-                { color: colors.text.onPrimary } : 
-                variant === 'secondary' ? 
-                { color: colors.text.onSecondary } : 
-                undefined
-              }
+            <Text
+              size="md"
+              weight="semibold"
+              variant={getTextVariant()}
+              style={{ color: getTextColor() }}
             >
               {label}
             </Text>
           </>
         )}
-      </Pressable>
+      </TouchableOpacity>
     </Animated.View>
   );
 }

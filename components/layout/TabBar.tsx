@@ -6,13 +6,14 @@ import { useTheme } from '@/hooks/useTheme';
 import { Text } from '@core/atoms/Text';
 import { Plus } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withTiming, 
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
   withSequence,
   Easing
 } from 'react-native-reanimated';
+import haptics from '@/utils/haptics';
 
 interface PlayButtonProps {
   onPress: () => void;
@@ -92,40 +93,43 @@ function PlayButton({ onPress }: PlayButtonProps) {
   
   // Handle press with animation sequence
   const handlePress = () => {
+    // Provide medium haptic feedback for the Play button
+    haptics.mediumImpact();
+
     scale.value = withSequence(
       withTiming(1.15, { duration: 200 }),
       withTiming(0.95, { duration: 150 }),
       withTiming(1.05, { duration: 100 }),
       withTiming(1, { duration: 100 })
     );
-    
+
     rotation.value = withSequence(
       withTiming(15, { duration: 150 }),
       withTiming(-10, { duration: 100 }),
       withTiming(0, { duration: 150 })
     );
-    
+
     iconRotation.value = withSequence(
       withTiming(0, { duration: 10 }),
       withTiming(135, { duration: 300, easing: Easing.out(Easing.ease) }),
       withTiming(90, { duration: 150, easing: Easing.inOut(Easing.ease) })
     );
-    
+
     bgOpacity.value = withSequence(
       withTiming(0.7, { duration: 100 }),
       withTiming(1, { duration: 200 })
     );
-    
+
     pulseScale.value = withSequence(
       withTiming(0.8, { duration: 10 }),
       withTiming(1.5, { duration: 300, easing: Easing.out(Easing.ease) })
     );
-    
+
     shadowOpacity.value = withSequence(
       withTiming(0.3, { duration: 50 }),
       withTiming(0, { duration: 300 })
     );
-    
+
     setTimeout(() => {
       iconRotation.value = withTiming(0, { duration: 300 });
       onPress();
@@ -221,7 +225,11 @@ export function TabBar({ state, descriptors, navigation }: TabBarProps) {
         ) : (
           <TouchableOpacity
             key={route.key}
-            onPress={() => navigation.navigate(route.name)}
+            onPress={() => {
+              // Add light haptic feedback for regular tab buttons
+              haptics.lightImpact();
+              navigation.navigate(route.name);
+            }}
             style={styles.tabButton}
             accessibilityRole="button"
             accessibilityState={isFocused ? { selected: true } : {}}

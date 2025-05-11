@@ -80,6 +80,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 1,
     borderBottomWidth: 0.5,
+    borderRadius: 24,
   },
   headerInner: {
     flexDirection: 'row',

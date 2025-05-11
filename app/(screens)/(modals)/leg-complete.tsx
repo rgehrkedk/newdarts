@@ -10,6 +10,7 @@ import { Button } from '@/components/core/atoms/Button';
 import { PlayerAccordion } from '@/components/features/game/common/PlayerAccordion';
 import Animated, { FadeIn, SlideInDown } from 'react-native-reanimated';
 import { Player } from '@/types/game';
+import haptics from '@/utils/haptics';
 
 export default function LegCompleteModal() {
   const router = useRouter();
@@ -25,6 +26,9 @@ export default function LegCompleteModal() {
   useEffect(() => {
     if (!gameData || !winner) {
       router.back();
+    } else {
+      // Play the special leg completion haptic feedback when the modal appears
+      haptics.legCompletionFeedback();
     }
   }, [gameData, winner]);
 

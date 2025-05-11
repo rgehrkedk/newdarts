@@ -1,5 +1,6 @@
 import { Player } from '@/types/game';
 import { getCheckoutType } from '@/utils/dart-utils';
+import haptics from '@/utils/haptics';
 
 interface ScoreSubmissionResult {
   error?: string;
@@ -28,6 +29,12 @@ export function useScoreSubmission(players: Player[]) {
 
     if (numericScore < 0 || numericScore > 180) {
       return { error: 'Score must be between 0 and 180' };
+    }
+
+    // Special haptic feedback for scoring 180
+    if (numericScore === 180) {
+      // Trigger the "ONE HUNDRED AND EIGHTY!" haptic sequence
+      haptics.oneEightyFeedback();
     }
 
     const remainingScore = activePlayer.score - numericScore;

@@ -1,6 +1,6 @@
 // components/core/molecules/LeaderboardPlayer.tsx
 import React, { useRef, useState } from 'react';
-import { TouchableWithoutFeedback, StyleSheet, View, Modal } from 'react-native';
+import { TouchableWithoutFeedback, StyleSheet, View } from 'react-native';
 import { spacing, layout } from '@/constants/theme';
 import { useThemeColors } from '@/constants/theme/colors';
 import { Text } from '@core/atoms/Text';
@@ -12,24 +12,29 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   interpolate,
-  Extrapolate,
-  useDerivedValue
 } from 'react-native-reanimated';
 import { GradientCard } from './GradientCard';
-import { PlayerOverlay } from '@/components/features/stats/components';
+
+// Interface for the position and dimensions object, similar to example
+export interface LeaderboardPlayerPosition {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
 interface LeaderboardPlayerProps {
   player: SavedPlayer;
   index: number;
-  onPress?: (player: SavedPlayer, position: { x: number, y: number, width: number, height: number }) => void;
+  // onPress now passes position and player to parent, parent handles overlay
+  onPress: (player: SavedPlayer, position: LeaderboardPlayerPosition) => void;
   sortBy: SortCategory;
-  clean?: boolean; // Whether to use clean version (default: true)
-  variant?: 'primary' | 'secondary' | 'avatar' | 'neutral'; // Default card variant
-  activeVariant?: 'primary' | 'secondary' | 'avatar' | 'neutral'; // Variant when pressed (defaults to avatar)
-  activeOpacity?: number; // Opacity level when pressed (0-1)
-  transitionDuration?: number; // Duration of transition in ms
-  isPressable?: boolean; // Whether the component should be pressable and open overlay (default: true)
-  showRank?: boolean; // Whether to show the rank number (default: true)
+  clean?: boolean;
+  variant?: 'primary' | 'secondary' | 'avatar' | 'neutral';
+  activeVariant?: 'primary' | 'secondary' | 'avatar' | 'neutral'; // For press-in feedback
+  activeOpacity?: number; // For press-in feedback
+  pressAnimationDuration?: number; // Duration for local press-in feedback
+  showRank?: boolean;
 }
 
 export function LeaderboardPlayer({
@@ -40,286 +45,148 @@ export function LeaderboardPlayer({
   clean = false,
   variant = 'neutral',
   activeVariant = 'avatar',
-  activeOpacity = 0.1,
-  transitionDuration = 150,
-  isPressable = true,
-  showRank = true
+  activeOpacity = 0.9, // Example active opacity for press-in
+  pressAnimationDuration = 100,
+  showRank = true,
 }: LeaderboardPlayerProps) {
   const colors = useThemeColors();
   const cardRef = useRef<View>(null);
 
-  // Animation values
-  const pressed = useSharedValue(0);
-  const opacity = useSharedValue(1);
-  
-  // Create a state to track the current variant
+  const pressProgress = useSharedValue(0); // 0 = normal, 1 = pressed
   const [currentVariant, setCurrentVariant] = useState(variant);
 
-  // Flag to ensure we don't trigger multiple measurements
-  const isMeasuring = useRef(false);
-
-  // Get display value based on sort category
   const getStatValue = (): string => {
     switch (sortBy) {
-      case 'average':
-        return (player.gameAvg || 0).toFixed(1);
-      case 'checkout':
-        return `${(player.checkoutPercentage || 0).toFixed(1)}%`;
-      case 'first9':
-        return (player.avgFirstNine || 0).toFixed(1);
-      case 'winrate':
-        return `${(player.winRate || 0).toFixed(1)}%`;
-      case 'games':
-        return `${player.gamesPlayed || 0}`;
-      case 'highestCheckout':
-        return `${player.highestCheckout || 0}`;
-      case 'bestLeg':
-        return (player.bestLegAvg || 0).toFixed(1);
-      case '180s':
-        return `${player.totalOneEighties || 0}`;
-      default:
-        return (player.gameAvg || 0).toFixed(1);
+      case 'average': return (player.gameAvg || 0).toFixed(1);
+      case 'checkout': return `${(player.checkoutPercentage || 0).toFixed(1)}%`;
+      case 'first9': return (player.avgFirstNine || 0).toFixed(1);
+      case 'winrate': return `${(player.winRate || 0).toFixed(1)}%`;
+      case 'games': return `${player.gamesPlayed || 0}`;
+      case 'highestCheckout': return `${player.highestCheckout || 0}`;
+      case 'bestLeg': return (player.bestLegAvg || 0).toFixed(1);
+      case '180s': return `${player.totalOneEighties || 0}`;
+      default: return (player.gameAvg || 0).toFixed(1);
     }
   };
-
-  // Get label for the stat
   const getStatLabel = (): string => {
     switch (sortBy) {
-      case 'average':
-        return 'avg';
-      case 'checkout':
-        return 'checkout';
-      case 'first9':
-        return 'first 9';
-      case 'winrate':
-        return 'win rate';
-      case 'games':
-        return 'games';
-      case 'highestCheckout':
-        return 'high CO';
-      case 'bestLeg':
-        return 'best leg';
-      case '180s':
-        return '180s';
-      default:
-        return 'avg';
+      case 'average': return 'avg';
+      case 'checkout': return 'checkout';
+      case 'first9': return 'first 9';
+      case 'winrate': return 'win rate';
+      case 'games': return 'games';
+      case 'highestCheckout': return 'high CO';
+      case 'bestLeg': return 'best leg';
+      case '180s': return '180s';
+      default: return 'avg';
     }
   };
 
-  // Add rank to player for display in overlay
-  const enhancedPlayer = {
-    ...player,
-    rank: index + 1,
-  };
-
-  // State to control modal visibility
-  const [showOverlay, setShowOverlay] = useState(false);
-
-  // Handle press to show our overlay without calling the external onPress
-  const handlePress = () => {
-    if (isPressable) {
-      // Only show overlay if the component is pressable
-      setShowOverlay(true);
+  const handleCardPress = () => {
+    if (cardRef.current) {
+      // measure gives x, y relative to parent. pageX, pageY are screen coords.
+      cardRef.current.measure((x, y, width, height, pageX, pageY) => {
+        onPress(player, { x: pageX, y: pageY, width, height });
+      });
     }
   };
 
-  // Handler to close the overlay
-  const handleCloseOverlay = () => {
-    setShowOverlay(false);
-  };
-
-  // Set card content
-  const CardContent = () => (
-    <View style={styles.innerContainer}>
-      <View style={styles.rankAndContent}>
-        {showRank && (
-          <Animated.View
-            style={[
-              styles.rankContainer,
-              { backgroundColor: index < 3 ? `${player.color}30` : 'transparent' }
-            ]}
-            sharedTransitionTag={`rank-${player.id}`}
-          >
-            <Text
-              weight="semibold"
-              size="lg"
-              style={[
-                styles.rankText,
-                { color: index < 3 ? player.color : colors.text.secondary }
-              ]}
-            >
-              {index + 1}
-            </Text>
-          </Animated.View>
-        )}
-
-        <View style={styles.content}>
-          <Animated.View 
-            style={styles.avatarWrapper}
-            sharedTransitionTag={`avatar-container-${player.id}`}
-          >
-            <Avatar
-              name={player.name}
-              color={player.color}
-              size={40}
-              sharedTransitionTag={`avatar-${player.id}`}
-            />
-          </Animated.View>
-
-          <View style={styles.textContainer}>
-            <Animated.Text 
-              style={[styles.name, { color: colors.text.primary }]}
-              sharedTransitionTag={`name-${player.id}`}
-            >
-              {player.name}
-            </Animated.Text>
-            <Text variant="secondary" size="sm">
-              {player.gamesPlayed || 0} games played
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.stats}>
-        <Text weight="semibold" style={{ color: colors.brand.primary }}>
-          {getStatValue()}
-        </Text>
-        <Text size="xs" variant="secondary">{getStatLabel()}</Text>
-      </View>
-    </View>
-  );
-
-  // Create animated styles for the container
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      opacity: interpolate(
-        opacity.value,
-        [0, 1],
-        [activeOpacity, 1],
-        Extrapolate.CLAMP
-      )
-    };
-  });
-
-  // Handle press in - activate pressed state
   const handlePressIn = () => {
-    pressed.value = withTiming(1, { duration: transitionDuration });
-    opacity.value = withTiming(activeOpacity, { duration: transitionDuration });
+    pressProgress.value = withTiming(1, { duration: pressAnimationDuration });
     setCurrentVariant(activeVariant);
   };
-
-  // Handle press out - deactivate pressed state
   const handlePressOut = () => {
-    pressed.value = withTiming(0, { duration: transitionDuration });
-    opacity.value = withTiming(1, { duration: transitionDuration });
+    pressProgress.value = withTiming(0, { duration: pressAnimationDuration });
     setCurrentVariant(variant);
   };
 
+  const cardAnimatedStyleForPress = useAnimatedStyle(() => {
+    return {
+      opacity: interpolate(pressProgress.value, [0, 1], [1, activeOpacity]),
+      transform: [{ scale: interpolate(pressProgress.value, [0, 1], [1, 0.97]) }],
+    };
+  });
+
   return (
-    <Animated.View
-      entering={FadeIn.delay(index * 100)}
-      style={animatedStyle}
-    >
+    <Animated.View entering={FadeIn.delay(index * 70)}>
       <TouchableWithoutFeedback
-        onPressIn={isPressable ? handlePressIn : undefined}
-        onPressOut={isPressable ? handlePressOut : undefined}
-        onPress={isPressable ? handlePress : undefined}
+        onPress={handleCardPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
       >
-        <View
-          ref={cardRef}
-          onLayout={() => {
-            // Reset measurement flag whenever layout changes
-            isMeasuring.current = false;
-          }}
-        >
+        <Animated.View ref={cardRef} style={cardAnimatedStyleForPress}>
+          {/* No sharedTransitionTag here. This View's geometry is measured. */}
           <GradientCard
-            variant={currentVariant}
+            variant={currentVariant} // For press-in visual feedback
             avatarColor={player.color}
             avatarGradientColor={player.color}
             clean={clean}
-            height={72}
+            height={72} // Fixed height for consistent measurement
             contentAlignment={'center'}
-            pressable={false} // Disable internal pressable behavior
-            outerTransparency={colors.transparency.veryLow} // Lower transparency for more subtle effect
-            animationDelay={index * 50}
+            pressable={false}
+            outerTransparency={colors.transparency.veryLow}
             style={styles.gradientCard}
-            borderRadius={layout.radius.lg} // Customize the border radius
-            innerMargin={2} // Use a smaller inner margin for a sleeker look
-            contentPadding={{ horizontal: spacing.md, vertical: spacing.sm }} // Custom padding for player cards
+            borderRadius={layout.radius.lg} // Initial border radius for the card
+            innerMargin={2}
+            contentPadding={{ horizontal: spacing.md, vertical: spacing.sm }}
           >
-            <CardContent />
+            {/* This is the visual content of the card. PlayerOverlay will reconstruct a similar header. */}
+            <View style={styles.innerContainer}>
+              <View style={styles.rankAndContent}>
+                {showRank && (
+                  <View // Plain View, not part of shared element animation system
+                    style={[
+                      styles.rankContainer,
+                      { backgroundColor: index < 3 ? `${player.color}30` : 'transparent' },
+                    ]}
+                  >
+                    <Text
+                      weight="semibold"
+                      size="lg"
+                      style={[
+                        styles.rankText,
+                        { color: index < 3 ? player.color : colors.text.secondary },
+                      ]}
+                    >
+                      {index + 1}
+                    </Text>
+                  </View>
+                )}
+                <View style={styles.content}>
+                  <View style={styles.avatarWrapper}>
+                    {/* This Avatar's properties (size 40) will be the source for interpolation */}
+                    <Avatar name={player.name} color={player.color} size={40} />
+                  </View>
+                  <View style={styles.textContainer}>
+                    {/* This Text's properties (fontSize 16) will be the source for interpolation */}
+                    <Text style={[styles.name, { color: colors.text.primary }]}>{player.name}</Text>
+                    <Text variant="secondary" size="sm">{player.gamesPlayed || 0} games played</Text>
+                  </View>
+                </View>
+              </View>
+              <View style={styles.statsOnCard}>
+                <Text weight="semibold" style={{ color: colors.brand.primary }}>{getStatValue()}</Text>
+                <Text size="xs" variant="secondary">{getStatLabel()}</Text>
+              </View>
+            </View>
           </GradientCard>
-        </View>
+        </Animated.View>
       </TouchableWithoutFeedback>
-
-      {/* Player overlay modal */}
-      <Modal
-        visible={showOverlay}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={handleCloseOverlay}
-      >
-        <View style={styles.modalContainer}>
-          <PlayerOverlay
-            player={enhancedPlayer}
-            onClose={handleCloseOverlay}
-          />
-        </View>
-      </Modal>
+      {/* Modal is removed from here; parent (test.tsx) controls PlayerOverlay's visibility */}
     </Animated.View>
   );
 }
 
+// Styles from your original LeaderboardPlayer.tsx
 const styles = StyleSheet.create({
-  gradientCard: {
-
-  },
-  innerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    // Padding is now handled by GradientCard's contentPadding prop
-  },
-  rankAndContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rankContainer: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.sm,
-  },
-  rankText: {
-    textAlign: 'center',
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  avatarWrapper: {
-    // Adding a dedicated wrapper for shared element transitions
-    borderRadius: 20, // Half of the avatar size for proper masking
-    overflow: 'hidden',
-  },
-  textContainer: {
-    gap: spacing.xs,
-  },
-  name: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  stats: {
-    alignItems: 'flex-end',
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
-  },
+    gradientCard: {},
+    innerContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' },
+    rankAndContent: { flexDirection: 'row', alignItems: 'center' },
+    rankContainer: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', marginRight: spacing.sm },
+    rankText: { textAlign: 'center' },
+    content: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+    avatarWrapper: { width: 40, height: 40, borderRadius: 20, overflow: 'hidden' }, // Fixed size for consistency
+    textContainer: { gap: spacing.xs },
+    name: { fontSize: 16, fontWeight: '600' }, // Source font size for name
+    statsOnCard: { alignItems: 'flex-end' },
 });

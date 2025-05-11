@@ -4,11 +4,12 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { PlayerCard } from '@/components/features/game/common/PlayerCard';
 import { PlayerStatsCard } from '@/components/features/game/common/PlayerStatsCard';
 import { ScoreInput } from '@/components/features/game/common/ScoreInput';
-import { 
+import { OneEightyConfetti } from '@/components/features/game/common/OneEightyConfetti';
+import {
   CheckoutModal,
   GameCompletionModal,
   LegCompletionModal,
-  SetCompletionModal 
+  SetCompletionModal
 } from '@/components/features/game/common/CompletionModals';
 import { useGameLogic } from '@/hooks/game/useGameLogic';
 import { spacing, layout } from '@/constants/theme';
@@ -16,6 +17,7 @@ import { useThemeColors } from '@/constants/theme/colors';
 import { useTheme } from '@/hooks/useTheme';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Player } from '@/types/game';
+import { useState } from 'react';
 
 const isIOS = Platform?.OS === 'ios';
 
@@ -24,7 +26,8 @@ export default function X01Game() {
   const colors = useThemeColors();
   const { isDark, toggleTheme } = useTheme();
   const params = useLocalSearchParams();
-  
+  const [showOneEightyConfetti, setShowOneEightyConfetti] = useState(false);
+
   // Initialize game with players and variant from params
   const initialPlayers: Player[] = params.players ? JSON.parse(params.players as string) : [];
   const totalLegs = params.totalLegs ? parseInt(params.totalLegs as string) : 1;
@@ -56,6 +59,17 @@ export default function X01Game() {
     handleHome,
     handleContinue,
   } = useGameLogic(initialPlayers, totalLegs, totalSets, variant);
+
+  // Custom handler to detect 180 scores and show confetti
+  const handleSubmitWithConfetti = () => {
+    // Check if the current score is 180 to trigger the confetti animation
+    if (currentScore === '180') {
+      setShowOneEightyConfetti(true);
+    }
+
+    // Call the original submit handler from useGameLogic
+    handleSubmit();
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background.primary }]}>
@@ -112,7 +126,7 @@ export default function X01Game() {
             error={error}
             onNumberPress={handleNumberPress}
             onDelete={handleDelete}
-            onSubmit={handleSubmit}
+            onSubmit={handleSubmitWithConfetti}
             onCommonScorePress={handleCommonScorePress}
             onUndo={handleUndo}
             onNextPlayer={handleNextPlayer}
@@ -156,6 +170,12 @@ export default function X01Game() {
             onContinue={handleContinue}
           />
         )}
+
+        {/* Confetti for 180 scores */}
+        <OneEightyConfetti
+          isVisible={showOneEightyConfetti}
+          onComplete={() => setShowOneEightyConfetti(false)}
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

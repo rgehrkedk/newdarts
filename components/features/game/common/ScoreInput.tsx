@@ -2,6 +2,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Platform } from '
 import { Trash2, RotateCcw, ArrowRight } from 'lucide-react-native';
 import { spacing, typography, layout } from '@/constants/theme';
 import { useThemeColors } from '@/constants/theme/colors';
+import haptics from '@/utils/haptics';
 
 const { width } = Dimensions.get('window');
 
@@ -40,9 +41,12 @@ export function ScoreInput({
     <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
       <View style={styles.scoreInputContainer}>
         <View style={styles.scoreInputWrapper}>
-          <TouchableOpacity 
-            style={[styles.controlButton, { backgroundColor: colors.background.secondary }]} 
-            onPress={onUndo}
+          <TouchableOpacity
+            style={[styles.controlButton, { backgroundColor: colors.background.secondary }]}
+            onPress={() => {
+              haptics.mediumImpact();
+              onUndo();
+            }}
           >
             <RotateCcw color={colors.text.primary} size={24} />
           </TouchableOpacity>
@@ -51,9 +55,12 @@ export function ScoreInput({
               {currentScore || 'Enter score'}
             </Text>
           </View>
-          <TouchableOpacity 
-            style={[styles.controlButton, { backgroundColor: colors.background.secondary }]} 
-            onPress={onNextPlayer}
+          <TouchableOpacity
+            style={[styles.controlButton, { backgroundColor: colors.background.secondary }]}
+            onPress={() => {
+              haptics.lightImpact();
+              onNextPlayer();
+            }}
           >
             <ArrowRight color={colors.text.primary} size={24} />
           </TouchableOpacity>
@@ -66,7 +73,10 @@ export function ScoreInput({
           <TouchableOpacity
             key={index}
             style={[styles.commonScoreButton, { backgroundColor: colors.background.secondary }]}
-            onPress={() => onCommonScorePress(score)}>
+            onPress={() => {
+              haptics.selectionFeedback();
+              onCommonScorePress(score);
+            }}>
             <Text style={[styles.commonScoreText, { color: colors.text.primary }]}>{score}</Text>
           </TouchableOpacity>
         ))}
@@ -78,7 +88,10 @@ export function ScoreInput({
             <TouchableOpacity
               key={num}
               style={[styles.numButton, { backgroundColor: colors.background.secondary }]}
-              onPress={() => onNumberPress(num.toString())}>
+              onPress={() => {
+                haptics.subtleFeedback();
+                onNumberPress(num.toString());
+              }}>
               <Text style={[styles.numButtonText, { color: colors.text.primary }]}>{num}</Text>
             </TouchableOpacity>
           ))}
@@ -88,7 +101,10 @@ export function ScoreInput({
             <TouchableOpacity
               key={num}
               style={[styles.numButton, { backgroundColor: colors.background.secondary }]}
-              onPress={() => onNumberPress(num.toString())}>
+              onPress={() => {
+                haptics.subtleFeedback();
+                onNumberPress(num.toString());
+              }}>
               <Text style={[styles.numButtonText, { color: colors.text.primary }]}>{num}</Text>
             </TouchableOpacity>
           ))}
@@ -98,27 +114,39 @@ export function ScoreInput({
             <TouchableOpacity
               key={num}
               style={[styles.numButton, { backgroundColor: colors.background.secondary }]}
-              onPress={() => onNumberPress(num.toString())}>
+              onPress={() => {
+                haptics.subtleFeedback();
+                onNumberPress(num.toString());
+              }}>
               <Text style={[styles.numButtonText, { color: colors.text.primary }]}>{num}</Text>
             </TouchableOpacity>
           ))}
         </View>
         <View style={styles.numpadRow}>
-          <TouchableOpacity 
-            style={[styles.numButton, { backgroundColor: colors.background.secondary }]} 
-            onPress={onDelete}
+          <TouchableOpacity
+            style={[styles.numButton, { backgroundColor: colors.background.secondary }]}
+            onPress={() => {
+              haptics.errorFeedback();
+              onDelete();
+            }}
           >
             <Trash2 color={colors.brand.error} size={24} />
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.numButton, { backgroundColor: colors.background.secondary }]} 
-            onPress={() => onNumberPress('0')}
+          <TouchableOpacity
+            style={[styles.numButton, { backgroundColor: colors.background.secondary }]}
+            onPress={() => {
+              haptics.subtleFeedback();
+              onNumberPress('0');
+            }}
           >
             <Text style={[styles.numButtonText, { color: colors.text.primary }]}>0</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.numButton, { backgroundColor: colors.brand.success }]} 
-            onPress={onSubmit}
+          <TouchableOpacity
+            style={[styles.numButton, { backgroundColor: colors.brand.success }]}
+            onPress={() => {
+              haptics.successFeedback();
+              onSubmit();
+            }}
           >
             <Text style={[styles.submitButtonText, { color: colors.white }]}>Submit</Text>
           </TouchableOpacity>

@@ -169,7 +169,7 @@ export function SegmentedControl<T>({
                   styles.optionText,
                   { 
                     color: value === option.value 
-                      ? (variant === 'primary' ? colors.white : colors.text.primary)
+                      ? (variant === 'primary' ? colors.text.onPrimary : colors.text.onPrimary)
                       : colors.text.secondary 
                   }
                 ]}
