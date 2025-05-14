@@ -3,6 +3,8 @@ import { Trash2, RotateCcw, ArrowRight } from 'lucide-react-native';
 import { spacing, typography, layout } from '@/constants/theme';
 import { useThemeColors } from '@/constants/theme/colors';
 import haptics from '@/utils/haptics';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '@/hooks/useTheme';
 
 const { width } = Dimensions.get('window');
 
@@ -35,132 +37,169 @@ export function ScoreInput({
   onNextPlayer,
 }: ScoreInputProps) {
   const colors = useThemeColors();
+  const { isDark } = useTheme();
   const commonScores = [26, 41, 45, 60, 85, 100];
 
+  // Define gradient colors based on theme
+  const gradientColors = [
+    colors.background.primary,
+    colors.background.secondary
+  ];
+
   return (
-    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
-      <View style={styles.scoreInputContainer}>
-        <View style={styles.scoreInputWrapper}>
-          <TouchableOpacity
-            style={[styles.controlButton, { backgroundColor: colors.background.secondary }]}
-            onPress={() => {
-              haptics.mediumImpact();
-              onUndo();
-            }}
-          >
-            <RotateCcw color={colors.text.primary} size={24} />
-          </TouchableOpacity>
-          <View style={[styles.scoreInput, { backgroundColor: colors.background.secondary }]}>
-            <Text style={[styles.scoreInputText, { color: colors.text.primary }]}>
-              {currentScore || 'Enter score'}
-            </Text>
+    <View style={styles.outerContainer}>
+      <LinearGradient
+        colors={gradientColors.map(color => color + colors.transparency.low)}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradientContainer}
+      >
+        <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
+          <View style={styles.scoreInputContainer}>
+            <View style={styles.scoreInputWrapper}>
+              <TouchableOpacity
+                style={[styles.controlButton, { backgroundColor: colors.background.secondary }]}
+                onPress={() => {
+                  haptics.mediumImpact();
+                  onUndo();
+                }}
+              >
+                <RotateCcw color={colors.text.primary} size={24} />
+              </TouchableOpacity>
+              <View style={[styles.scoreInput, { backgroundColor: colors.background.secondary }]}>
+                <Text style={[styles.scoreInputText, { color: colors.text.primary }]}>
+                  {currentScore || 'Enter score'}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.controlButton, { backgroundColor: colors.background.secondary }]}
+                onPress={() => {
+                  haptics.lightImpact();
+                  onNextPlayer();
+                }}
+              >
+                <ArrowRight color={colors.text.primary} size={24} />
+              </TouchableOpacity>
+            </View>
+            {error ? <Text style={[styles.errorText, { color: colors.brand.error }]}>{error}</Text> : null}
           </View>
-          <TouchableOpacity
-            style={[styles.controlButton, { backgroundColor: colors.background.secondary }]}
-            onPress={() => {
-              haptics.lightImpact();
-              onNextPlayer();
-            }}
-          >
-            <ArrowRight color={colors.text.primary} size={24} />
-          </TouchableOpacity>
-        </View>
-        {error ? <Text style={[styles.errorText, { color: colors.brand.error }]}>{error}</Text> : null}
-      </View>
 
-      <View style={styles.commonScores}>
-        {commonScores.map((score, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[styles.commonScoreButton, { backgroundColor: colors.background.secondary }]}
-            onPress={() => {
-              haptics.selectionFeedback();
-              onCommonScorePress(score);
-            }}>
-            <Text style={[styles.commonScoreText, { color: colors.text.primary }]}>{score}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+          <View style={styles.commonScores}>
+            {commonScores.map((score, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[styles.commonScoreButton, { backgroundColor: colors.background.secondary }]}
+                onPress={() => {
+                  haptics.selectionFeedback();
+                  onCommonScorePress(score);
+                }}>
+                <Text style={[styles.commonScoreText, { color: colors.text.primary }]}>{score}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
 
-      <View style={styles.numpad}>
-        <View style={styles.numpadRow}>
-          {[1, 2, 3].map((num) => (
-            <TouchableOpacity
-              key={num}
-              style={[styles.numButton, { backgroundColor: colors.background.secondary }]}
-              onPress={() => {
-                haptics.subtleFeedback();
-                onNumberPress(num.toString());
-              }}>
-              <Text style={[styles.numButtonText, { color: colors.text.primary }]}>{num}</Text>
-            </TouchableOpacity>
-          ))}
+          <View style={styles.numpad}>
+            <View style={styles.numpadRow}>
+              {[1, 2, 3].map((num) => (
+                <TouchableOpacity
+                  key={num}
+                  style={[styles.numButton, { backgroundColor: colors.background.secondary }]}
+                  onPress={() => {
+                    haptics.subtleFeedback();
+                    onNumberPress(num.toString());
+                  }}>
+                  <Text style={[styles.numButtonText, { color: colors.text.primary }]}>{num}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <View style={styles.numpadRow}>
+              {[4, 5, 6].map((num) => (
+                <TouchableOpacity
+                  key={num}
+                  style={[styles.numButton, { backgroundColor: colors.background.secondary }]}
+                  onPress={() => {
+                    haptics.subtleFeedback();
+                    onNumberPress(num.toString());
+                  }}>
+                  <Text style={[styles.numButtonText, { color: colors.text.primary }]}>{num}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <View style={styles.numpadRow}>
+              {[7, 8, 9].map((num) => (
+                <TouchableOpacity
+                  key={num}
+                  style={[styles.numButton, { backgroundColor: colors.background.secondary }]}
+                  onPress={() => {
+                    haptics.subtleFeedback();
+                    onNumberPress(num.toString());
+                  }}>
+                  <Text style={[styles.numButtonText, { color: colors.text.primary }]}>{num}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <View style={styles.numpadRow}>
+              <TouchableOpacity
+                style={[styles.numButton, { backgroundColor: colors.background.secondary }]}
+                onPress={() => {
+                  haptics.errorFeedback();
+                  onDelete();
+                }}
+              >
+                <Trash2 color={colors.brand.error} size={24} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.numButton, { backgroundColor: colors.background.secondary }]}
+                onPress={() => {
+                  haptics.subtleFeedback();
+                  onNumberPress('0');
+                }}
+              >
+                <Text style={[styles.numButtonText, { color: colors.text.primary }]}>0</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.numButton, { backgroundColor: colors.brand.success }]}
+                onPress={() => {
+                  haptics.successFeedback();
+                  onSubmit();
+                }}
+              >
+                <Text style={[styles.submitButtonText, { color: colors.white }]}>Submit</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-        <View style={styles.numpadRow}>
-          {[4, 5, 6].map((num) => (
-            <TouchableOpacity
-              key={num}
-              style={[styles.numButton, { backgroundColor: colors.background.secondary }]}
-              onPress={() => {
-                haptics.subtleFeedback();
-                onNumberPress(num.toString());
-              }}>
-              <Text style={[styles.numButtonText, { color: colors.text.primary }]}>{num}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        <View style={styles.numpadRow}>
-          {[7, 8, 9].map((num) => (
-            <TouchableOpacity
-              key={num}
-              style={[styles.numButton, { backgroundColor: colors.background.secondary }]}
-              onPress={() => {
-                haptics.subtleFeedback();
-                onNumberPress(num.toString());
-              }}>
-              <Text style={[styles.numButtonText, { color: colors.text.primary }]}>{num}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        <View style={styles.numpadRow}>
-          <TouchableOpacity
-            style={[styles.numButton, { backgroundColor: colors.background.secondary }]}
-            onPress={() => {
-              haptics.errorFeedback();
-              onDelete();
-            }}
-          >
-            <Trash2 color={colors.brand.error} size={24} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.numButton, { backgroundColor: colors.background.secondary }]}
-            onPress={() => {
-              haptics.subtleFeedback();
-              onNumberPress('0');
-            }}
-          >
-            <Text style={[styles.numButtonText, { color: colors.text.primary }]}>0</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.numButton, { backgroundColor: colors.brand.success }]}
-            onPress={() => {
-              haptics.successFeedback();
-              onSubmit();
-            }}
-          >
-            <Text style={[styles.submitButtonText, { color: colors.white }]}>Submit</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      </LinearGradient>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    marginTop: spacing.lg,
+    borderRadius: layout.radius.xxxl,
+  
+  },
+  gradientContainer: {
+    borderTopLeftRadius: layout.radius.xxxl,
+    borderTopRightRadius: layout.radius.xxxl,
+    borderBottomLeftRadius: 0,   
+    borderBottomRightRadius: 0,   
+    paddingBottom: 0, // Border thickness
+    paddingTop: 2,
+    paddingHorizontal: 2,
+    overflow: 'hidden',
+  },
   container: {
-    borderTopLeftRadius: layout.radius.xl,
-    borderTopRightRadius: layout.radius.xl,
+    borderTopLeftRadius: layout.radius.xxxl,
+    borderTopRightRadius: layout.radius.xxxl,
+    borderBottomLeftRadius: 0,   
+    borderBottomRightRadius: 0,   
     paddingTop: spacing.md,
+    marginLeft: -1,
+    marginRight: -1,
+    overflow: 'hidden',
+
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -180,8 +219,8 @@ const styles = StyleSheet.create({
     }),
   },
   scoreInputContainer: {
-    paddingHorizontal: spacing.container,
-    paddingTop: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
     alignItems: 'center',
   },
   scoreInputWrapper: {
@@ -216,7 +255,7 @@ const styles = StyleSheet.create({
   commonScores: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.container,
+    paddingHorizontal: spacing.md,
     paddingVertical: spacing.lg,
   },
   commonScoreButton: {
@@ -231,7 +270,8 @@ const styles = StyleSheet.create({
     fontFamily: typography.families.regular,
   },
   numpad: {
-    paddingHorizontal: spacing.container,
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
     gap: spacing.sm,
   },
   numpadRow: {

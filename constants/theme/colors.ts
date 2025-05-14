@@ -142,6 +142,7 @@ const semanticLight = {
   border: {
     primary: palette.neutral[200],
     secondary: palette.neutral[300],
+    gradient: '#0000001a',
   },
 
   // Brand colors
@@ -214,6 +215,7 @@ const semanticDark = {
   border: {
     primary: palette.neutral[700],
     secondary: palette.neutral[600],
+    gradient: '#ffffff1a',
   },
 
   // Brand colors

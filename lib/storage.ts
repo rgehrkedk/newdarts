@@ -38,7 +38,10 @@ class WebStorage implements StorageAdapter {
 class NativeStorage implements StorageAdapter {
   async getItem(key: string): Promise<string | null> {
     try {
-      if (Platform.OS === 'web') {
+      // SecureStore for sensitive data, AsyncStorage for regular data
+      // Both work on native platforms
+      const useSecureStore = key.startsWith('secure_');
+      if (useSecureStore) {
         return await SecureStore.getItemAsync(key);
       }
       return await AsyncStorage.getItem(key);
@@ -50,7 +53,9 @@ class NativeStorage implements StorageAdapter {
 
   async setItem(key: string, value: string): Promise<void> {
     try {
-      if (Platform.OS === 'web') {
+      // SecureStore for sensitive data, AsyncStorage for regular data
+      const useSecureStore = key.startsWith('secure_');
+      if (useSecureStore) {
         await SecureStore.setItemAsync(key, value);
       } else {
         await AsyncStorage.setItem(key, value);
@@ -62,7 +67,9 @@ class NativeStorage implements StorageAdapter {
 
   async removeItem(key: string): Promise<void> {
     try {
-      if (Platform.OS === 'web') {
+      // SecureStore for sensitive data, AsyncStorage for regular data
+      const useSecureStore = key.startsWith('secure_');
+      if (useSecureStore) {
         await SecureStore.deleteItemAsync(key);
       } else {
         await AsyncStorage.removeItem(key);

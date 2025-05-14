@@ -1,5 +1,5 @@
 import { View, StyleSheet, ScrollView, SafeAreaView, Platform, TouchableOpacity, KeyboardAvoidingView } from 'react-native';
-import { ChevronLeft, Moon, Sun } from 'lucide-react-native';
+import { ChevronLeft, Moon, NotebookPen, Sun } from 'lucide-react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { PlayerCard } from '@/components/features/game/common/PlayerCard';
 import { PlayerStatsCard } from '@/components/features/game/common/PlayerStatsCard';
@@ -18,6 +18,7 @@ import { useTheme } from '@/hooks/useTheme';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Player } from '@/types/game';
 import { useState } from 'react';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
 
 const isIOS = Platform?.OS === 'ios';
 
@@ -187,6 +188,7 @@ const styles = StyleSheet.create({
   },
   keyboardAvoid: {
     flex: 1,
+
   },
   header: {
     flexDirection: 'row',
@@ -227,5 +229,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     paddingBottom: isIOS ? spacing.xl : 0,
+    backgroundColor: 'transparent',
+    overflow: 'hidden',
   },
 });

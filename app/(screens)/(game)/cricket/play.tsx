@@ -84,14 +84,16 @@ export default function CricketGame() {
         )}
       </ScrollView>
 
-      <CricketScoreInput
-        onNumberPress={handleNumberPress}
-        onDelete={handleDelete}
-        onSubmit={handleSubmit}
-        selectedNumber={selectedNumber}
-        currentMarks={currentMarks}
-        availableNumbers={availableNumbers}
-      />
+      <View style={styles.inputContainer}>
+        <CricketScoreInput
+          onNumberPress={handleNumberPress}
+          onDelete={handleDelete}
+          onSubmit={handleSubmit}
+          selectedNumber={selectedNumber}
+          currentMarks={currentMarks}
+          availableNumbers={availableNumbers}
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -136,5 +138,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.container,
     gap: spacing.card.gap,
     marginBottom: spacing.md,
+  },
+  inputContainer: {
+    paddingBottom: Platform.OS === 'ios' ? spacing.xl : 0,
+    backgroundColor: 'transparent',
+    overflow: 'hidden',
   },
 });
