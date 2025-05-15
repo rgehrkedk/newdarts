@@ -36,4 +36,4 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Run EAS Update
-        run: eas update --branch main
+        run: eas update --branch main --message "Auto update from main"
