@@ -43,6 +43,15 @@
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "owner": "rgehrke"
+    "owner": "rgehrke",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b0c7abd3-434a-4198-b135-c4a90b96327e"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/b0c7abd3-434a-4198-b135-c4a90b96327e"
+    }
   }
 }
