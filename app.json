@@ -40,18 +40,9 @@
     "experiments": {
       "typedRoutes": true
     },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "c3fc49fb-a9b6-4d4e-ae98-615c972e5f21"
-      }
-    },
-    "owner": "rgehrke",
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "updates": {
-      "url": "https://u.expo.dev/c3fc49fb-a9b6-4d4e-ae98-615c972e5f21"
-    }
+    "owner": "rgehrke"
   }
 }
