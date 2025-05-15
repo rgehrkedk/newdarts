@@ -32,6 +32,11 @@ export default function CricketSetup() {
     setError('');
   };
 
+  const handleReorderPlayers = (reorderedPlayers: PlayerItem[]) => {
+    setPlayers(reorderedPlayers);
+    setError('');
+  };
+
   const handleEditPlayer = (player: PlayerItem) => {
     setEditingPlayer(player);
     setDrawerVisible(true);
@@ -111,6 +116,7 @@ export default function CricketSetup() {
           onRemovePlayer={removePlayer}
           onEditPlayer={handleEditPlayer}
           onOpenPlayerDrawer={() => setDrawerVisible(true)}
+          onReorderPlayers={handleReorderPlayers}
         />
 
         <CricketSettingsCard

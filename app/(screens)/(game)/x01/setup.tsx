@@ -33,6 +33,11 @@ export default function X01Setup() {
     setError('');
   };
 
+  const handleReorderPlayers = (reorderedPlayers: PlayerItem[]) => {
+    setPlayers(reorderedPlayers);
+    setError('');
+  };
+
   const handleEditPlayer = (player: PlayerItem) => {
     setEditingPlayer(player);
     setDrawerVisible(true);
@@ -111,6 +116,7 @@ export default function X01Setup() {
           onRemovePlayer={removePlayer}
           onEditPlayer={handleEditPlayer}
           onOpenPlayerDrawer={() => setDrawerVisible(true)}
+          onReorderPlayers={handleReorderPlayers}
         />
 
         <GameSettingsCard

@@ -66,7 +66,9 @@
     "stream-http": "^3.2.0",
     "tls-browserify": "^0.2.2",
     "util": "^0.12.5",
-    "zustand": "^4.5.2"
+    "zustand": "^4.5.2",
+    "expo-dev-client": "~5.1.8",
+    "expo-updates": "~0.28.13"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
