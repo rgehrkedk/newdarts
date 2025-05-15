@@ -228,7 +228,7 @@ export default function Home() {
       <Animated.View entering={FadeInDown.delay(200).duration(600)} style={styles.gameButtonsContainer}>
         <Button
           variant="gradient-border-primary"
-          label="X01 Game"
+          label="X01 Game FFS"
           icon={Plus}
           onPress={() => router.push('/game/setup')}
           style={styles.gameButtonFlex}
