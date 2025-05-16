@@ -9,11 +9,13 @@ import { Button } from '@/components/core/atoms/Button';
 import { Plus, User, ChevronRight } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function PlayerList() {
   const colors = useThemeColors();
   const router = useRouter();
   const { players } = usePlayers();
+  const insets = useSafeAreaInsets();
 
   const handleCreatePlayer = () => {
     import('@/utils/navigation').then(({ navigateToCreatePlayer }) => {
@@ -34,15 +36,9 @@ export default function PlayerList() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background.primary }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background.primary }]} edges={['top']}>
       <View style={styles.header}>
         <Text size="xl" weight="semibold">Players</Text>
-        <Button 
-          label="Create"
-          variant="primary"
-          icon={Plus}
-          onPress={handleCreatePlayer}
-        />
       </View>
       
       {players.length === 0 ? (
@@ -71,7 +67,10 @@ export default function PlayerList() {
         <FlatList
           data={players}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[
+            styles.listContent, 
+            { paddingBottom: 80 + insets.bottom } // Add extra padding for the sticky button
+          ]}
           renderItem={({ item, index }) => (
             <Animated.View
               entering={FadeInDown.delay(index * 100).springify()}
@@ -110,6 +109,26 @@ export default function PlayerList() {
           )}
         />
       )}
+      
+      {/* Sticky Add Player Button */}
+      <View 
+        style={[
+          styles.stickyButtonContainer, 
+          { 
+            backgroundColor: colors.background.primary,
+            paddingBottom: Math.max(insets.bottom, spacing.md),
+            borderTopColor: colors.border.primary
+          }
+        ]}
+      >
+        <Button 
+          label="Add Player"
+          variant="primary"
+          icon={Plus}
+          onPress={handleCreatePlayer}
+          style={styles.stickyButton}
+        />
+      </View>
     </SafeAreaView>
   );
 }
@@ -164,5 +183,22 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  stickyButtonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingTop: spacing.md,
+    paddingHorizontal: spacing.container,
+    borderTopWidth: 1,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  stickyButton: {
+    width: '100%',
   },
 });

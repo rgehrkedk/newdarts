@@ -3,6 +3,7 @@ import { spacing } from '@/constants/theme';
 import { Users } from 'lucide-react-native';
 import { Drawer } from '@/components/core/molecules/Drawer';
 import { ConfirmDialog } from '@/components/core/molecules/ConfirmDialog';
+import { Text } from '@/components/core/atoms/Text';
 import { usePlayers } from '@/hooks/usePlayers';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
@@ -48,6 +49,7 @@ export function PlayerDrawer({
   const [editingSavedPlayer, setEditingSavedPlayer] = useState<SavedPlayer | null>(null);
   const [selectedPlayerStats, setSelectedPlayerStats] = useState<SavedPlayer | null>(null);
   const [isGuest, setIsGuest] = useState(false);
+  const [hasOwnerPlayer, setHasOwnerPlayer] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { session } = useAuth();
   const currentUserId = session?.user?.id;
@@ -55,6 +57,21 @@ export function PlayerDrawer({
   const availablePlayers = players.filter(
     player => !selectedPlayers.some(p => p.id === player.id)
   );
+
+  // Check if user already has an owner player
+  useEffect(() => {
+    if (currentUserId && players.length > 0) {
+      const ownerExists = players.some(player => 
+        player.user_id === currentUserId && !player.isGuest
+      );
+      setHasOwnerPlayer(ownerExists);
+      
+      // If owner exists and we're in 'new' step, force guest mode
+      if (ownerExists && step === 'new') {
+        setIsGuest(true);
+      }
+    }
+  }, [players, currentUserId, step]);
 
   useEffect(() => {
     if (editingPlayer) {
@@ -119,7 +136,8 @@ export function PlayerDrawer({
         color: selectedColor,
         gameAvg: 0,
         checkoutPercentage: 0,
-        isGuest,
+        // All new players are created as guests
+        isGuest: true,
       });
 
       onSelectPlayer(newPlayer);
@@ -209,22 +227,24 @@ export function PlayerDrawer({
           )}
 
           {(step === 'new' || step === 'edit') && (
-            <PlayerForm
-              name={playerName}
-              color={selectedColor}
-              isGuest={isGuest}
-              isEditing={step === 'edit'}
-              onNameChange={setPlayerName}
-              onColorChange={setSelectedColor}
-              onGuestToggle={() => setIsGuest(!isGuest)}
-              onSubmit={step === 'new' ? handleAddNewPlayer : handleEditPlayer}
-              onShowStats={editingSavedPlayer ? () => {
-                setSelectedPlayerStats(editingSavedPlayer);
-                navigateToStep('stats');
-              } : undefined}
-              onDelete={editingSavedPlayer?.isGuest ? () => setShowDeleteConfirm(true) : undefined}
-              player={editingSavedPlayer}
-            />
+            <>
+              <PlayerForm
+                name={playerName}
+                color={selectedColor}
+                isGuest={true}
+                isEditing={step === 'edit'}
+                onNameChange={setPlayerName}
+                onColorChange={setSelectedColor}
+                onGuestToggle={() => {}}
+                onSubmit={step === 'new' ? handleAddNewPlayer : handleEditPlayer}
+                onShowStats={editingSavedPlayer ? () => {
+                  setSelectedPlayerStats(editingSavedPlayer);
+                  navigateToStep('stats');
+                } : undefined}
+                onDelete={editingSavedPlayer?.isGuest ? () => setShowDeleteConfirm(true) : undefined}
+                player={editingSavedPlayer}
+              />
+            </>
           )}
 
           {step === 'stats' && selectedPlayerStats && (
@@ -254,5 +274,14 @@ const styles = StyleSheet.create({
   statsContainer: {
     flex: 1,
     marginHorizontal: -spacing.md, // Remove horizontal padding to match the tabs design
+  },
+  infoBox: {
+    backgroundColor: 'rgba(217, 119, 6, 0.15)', // Amber/orange with transparency
+    padding: spacing.md,
+    borderRadius: 8,
+    marginTop: spacing.sm,
+  },
+  infoText: {
+    fontSize: 13,
   },
 });

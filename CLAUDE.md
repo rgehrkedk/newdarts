@@ -84,8 +84,50 @@ The app follows atomic design principles with components organized by hierarchy:
   
 - **Feature Components** (`components/features`):
   - Domain-specific components grouped by feature
-  - Built on core components
+  - Built on core atomic components (atoms, molecules, organisms)
+  - Organized by logical domains (game, players, stats, auth)
   - Examples: game/cricket, game/setup, players
+  
+  **Feature Components Structure:**
+  - **auth/**:
+    - Authentication-related components like AuthForm
+    - Handles login, registration, and account management UIs
+  
+  - **game/**:
+    - **common/**: Shared game components used across variants
+      - **CompletionModals/**: Modals for different game completion states
+        - CheckoutModal, GameCompletionModal, LegCompletionModal, SetCompletionModal
+      - Player components (PlayerCard, PlayerAccordion, PlayerStatsCard)
+      - Score input components (ScoreInput)
+      - Special effects (ConfettiExplosion, OneEightyConfetti)
+    - **cricket/**: Cricket-specific game components
+      - CricketPlayerCard, CricketPlayerStats, CricketScoreInput
+    - **setup/**: Game configuration components
+      - GameSettingsCard, CricketSettingsCard
+  
+  - **players/**:
+    - Player management components
+    - PlayerDrawer - Modal drawer for player selection and creation
+    - PlayerForm - Form for creating/editing player profiles
+    - PlayerList - Scrollable list of available players
+    - PlayerDetailsCard - Display card for player information
+  
+  - **stats/**:
+    - Statistics visualization components
+    - PlayerStats - Main statistics view
+    - PlayerStatsModal - Modal for displaying detailed stats
+    - **components/**: Building blocks for stats visualization
+      - Various charts, tables, and specialized displays
+      - Includes performance visualizations (TrendChart, HighScores)
+      - Date filtering (PeriodFilter)
+      - Layout elements (StickyHeader, PlayerOverlay)
+      
+  **Feature Component Integration Pattern:**
+  - Components compose atomic elements (atoms, molecules) into domain-specific interfaces
+  - Use custom hooks from `/hooks` directory for business logic
+  - Pass domain-specific props rather than generic styling props
+  - Connect to global state through hook calls inside components
+  - Use shared styling constants from theme system
 
 ## Theming System
 - **Color Structure**:
