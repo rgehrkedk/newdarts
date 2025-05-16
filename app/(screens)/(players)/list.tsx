@@ -10,6 +10,7 @@ import { Plus, User, ChevronRight } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StickyButtonContainer } from '@/components/core/molecules';
 
 export default function PlayerList() {
   const colors = useThemeColors();
@@ -111,16 +112,7 @@ export default function PlayerList() {
       )}
       
       {/* Sticky Add Player Button */}
-      <View 
-        style={[
-          styles.stickyButtonContainer, 
-          { 
-            backgroundColor: colors.background.primary,
-            paddingBottom: Math.max(insets.bottom, spacing.md),
-            borderTopColor: colors.border.primary
-          }
-        ]}
-      >
+      <StickyButtonContainer>
         <Button 
           label="Add Player"
           variant="primary"
@@ -128,7 +120,7 @@ export default function PlayerList() {
           onPress={handleCreatePlayer}
           style={styles.stickyButton}
         />
-      </View>
+      </StickyButtonContainer>
     </SafeAreaView>
   );
 }
@@ -183,20 +175,6 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  stickyButtonContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingTop: spacing.md,
-    paddingHorizontal: spacing.container,
-    borderTopWidth: 1,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
   },
   stickyButton: {
     width: '100%',

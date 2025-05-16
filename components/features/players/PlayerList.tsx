@@ -1,12 +1,12 @@
-import { View, StyleSheet, ScrollView, Platform, KeyboardAvoidingView, Keyboard } from 'react-native';
+import React, { useRef } from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
 import { spacing } from '@/constants/theme';
 import { Plus } from 'lucide-react-native';
 import { Text } from '@core/atoms/Text';
 import { Button } from '@core/atoms/Button';
 import { ListItem } from '@core/molecules/ListItem';
-import { useThemeColors } from '@/constants/theme/colors';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useState, useEffect } from 'react';
+import { StickyButtonContainer } from '@core/molecules/StickyButtonContainer';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 // Define the SavedPlayer interface within the component file for portability
 interface SavedPlayer {
@@ -40,36 +40,7 @@ export function PlayerList({
   onShowStats,
   onAddNew,
 }: PlayerListProps) {
-  const colors = useThemeColors();
-  const insets = useSafeAreaInsets();
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
-  
-  // Track keyboard visibility
-  useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
-      () => setKeyboardVisible(true)
-    );
-    const keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide',
-      () => setKeyboardVisible(false)
-    );
-
-    return () => {
-      keyboardDidShowListener.remove();
-      keyboardDidHideListener.remove();
-    };
-  }, []);
-  
-  // Determine padding based on keyboard state and platform
-  const keyboardOffset = Platform.OS === 'ios' ? 0 : 0;
-  
-  // Style for button container with keyboard awareness
-  const buttonContainerStyle = {
-    ...styles.stickyButton,
-    backgroundColor: colors.background.primary,
-    paddingBottom: Math.max(insets.bottom, spacing.sm),
-  };
+  const scrollViewRef = useRef(null);
   
   if (loading) {
     return (
@@ -89,11 +60,7 @@ export function PlayerList({
 
   if (players.length === 0) {
     return (
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
-        keyboardVerticalOffset={keyboardOffset}
-      >
+      <View style={styles.container}>
         <View style={styles.emptyState}>
           <Text variant="secondary" align="center">
             No players found. Create your first player!
@@ -105,20 +72,21 @@ export function PlayerList({
             onPress={onAddNew}
           />
         </View>
-      </KeyboardAvoidingView>
+      </View>
     );
   }
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-      keyboardVerticalOffset={keyboardOffset}
-    >
-      <ScrollView 
+    <View style={styles.container}>
+      <KeyboardAwareScrollView 
+        ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
+        enableOnAndroid={true}
+        extraScrollHeight={120}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
       >
         {players.map((player, index) => (
           <ListItem
@@ -138,52 +106,40 @@ export function PlayerList({
           />
         ))}
         {/* Add extra space at the bottom to ensure content isn't hidden behind the button */}
-        <View style={{ paddingBottom: 80 + insets.bottom }} />
-      </ScrollView>
-      <View style={buttonContainerStyle}>
+        <View style={{ height: 100 }} />
+      </KeyboardAwareScrollView>
+      
+      <StickyButtonContainer>
         <Button
           label="Add New Player"
           variant="secondary"
           icon={Plus}
           onPress={onAddNew}
         />
-      </View>
-    </KeyboardAvoidingView>
+      </StickyButtonContainer>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    position: 'relative',
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
+    gap: spacing.md,
   },
   emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     gap: spacing.lg,
     paddingVertical: spacing.xl,
     paddingHorizontal: spacing.md,
-  },
-  stickyButton: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(150, 150, 150, 0.2)',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-  },
-  bottomPadding: {
-    paddingBottom: spacing.xxl * 2, // Extra padding at the bottom to ensure content is visible above the sticky button
   },
 });

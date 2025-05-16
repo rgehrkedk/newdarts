@@ -1,13 +1,13 @@
-import { View, StyleSheet, ScrollView, Platform, KeyboardAvoidingView, Keyboard } from 'react-native';
+import React, { useRef } from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
 import { spacing } from '@/constants/theme';
 import { Text } from '@core/atoms/Text';
 import { Input } from '@core/atoms/Input';
 import { Button } from '@core/atoms/Button';
 import { ColorPicker } from '@core/molecules/ColorPicker';
+import { StickyButtonContainer } from '@core/molecules/StickyButtonContainer';
 import { ChartBar as BarChart3, Trash2 } from 'lucide-react-native';
-import { useThemeColors } from '@/constants/theme/colors';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useState, useEffect } from 'react';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 // Define the SavedPlayer interface within the component file for portability
 interface SavedPlayer {
@@ -47,44 +47,61 @@ export function PlayerForm({
   onDelete,
   player,
 }: PlayerFormProps) {
-  const colors = useThemeColors();
-  const insets = useSafeAreaInsets();
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const scrollViewRef = useRef(null);
   
-  // Track keyboard visibility
-  useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
-      () => setKeyboardVisible(true)
-    );
-    const keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide',
-      () => setKeyboardVisible(false)
-    );
-
-    return () => {
-      keyboardDidShowListener.remove();
-      keyboardDidHideListener.remove();
-    };
-  }, []);
+  // Extra offset for button container to ensure it stays above keyboard
+  const verticalOffset = Platform.OS === 'ios' ? 120 : 80;
   
-  // Determine padding based on keyboard state and platform
-  const keyboardOffset = Platform.OS === 'ios' ? 0 : 0;
+  // Prepare button content
+  const buttonContent = (
+    <>
+      <Button
+        label={isEditing ? "Save Changes" : "Add Player"}
+        variant="primary"
+        onPress={onSubmit}
+        disabled={!name.trim()}
+      />
+      {isEditing && (
+        <>
+          {onShowStats && (
+            <Button
+              label="View Stats"
+              variant="secondary"
+              icon={BarChart3}
+              onPress={onShowStats}
+            />
+          )}
+          {onDelete && player?.isGuest && (
+            <Button
+              label="Delete Player"
+              variant="error"
+              icon={Trash2}
+              onPress={onDelete}
+            />
+          )}
+        </>
+      )}
+    </>
+  );
   
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-      keyboardVerticalOffset={keyboardOffset}
-    >
-      <ScrollView 
+    <View style={styles.container}>
+      <KeyboardAwareScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
+        extraScrollHeight={verticalOffset}
+        enableOnAndroid={true}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+        resetScrollToCoords={{ x: 0, y: 0 }}
       >
         <Input
           value={name}
           onChangeText={onNameChange}
           placeholder="Player Name"
+          autoFocus={!isEditing}
         />
         <ColorPicker
           selectedColor={color}
@@ -99,83 +116,34 @@ export function PlayerForm({
         )}
         
         {/* Extra padding to ensure content isn't hidden behind button */}
-        <View style={{ paddingBottom: 80 + insets.bottom }} />
-      </ScrollView>
+        <View style={{ height: 120 }} />
+      </KeyboardAwareScrollView>
       
-      <View style={[
-        styles.stickyContainer, 
-        { 
-          backgroundColor: colors.background.primary,
-          paddingBottom: Math.max(insets.bottom, spacing.sm),
-        }
-      ]}>
-        <View style={styles.actions}>
-          <Button
-            label={isEditing ? "Save Changes" : "Add Player"}
-            variant="primary"
-            onPress={onSubmit}
-            disabled={!name.trim()}
-          />
-          {isEditing && (
-            <>
-              {onShowStats && (
-                <Button
-                  label="View Stats"
-                  variant="secondary"
-                  icon={BarChart3}
-                  onPress={onShowStats}
-                />
-              )}
-              {onDelete && player?.isGuest && (
-                <Button
-                  label="Delete Player"
-                  variant="error"
-                  icon={Trash2}
-                  onPress={onDelete}
-                />
-              )}
-            </>
-          )}
-        </View>
-      </View>
-    </KeyboardAvoidingView>
+      {/* Using our new StickyButtonContainer component */}
+      <StickyButtonContainer extraBottomPadding={16}>
+        {buttonContent}
+      </StickyButtonContainer>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    position: 'relative',
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: spacing.sm,
-    paddingTop: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
     gap: spacing.md,
   },
   infoSection: {
-    marginTop: spacing.sm,
+    marginTop: spacing.md,
   },
   guestInfo: {
     marginTop: spacing.xs,
-  },
-  stickyContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(150, 150, 150, 0.2)',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-  },
-  actions: {
-    gap: spacing.md,
   },
 });

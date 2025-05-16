@@ -257,8 +257,9 @@ const styles = StyleSheet.create({
   tabBarContainer: {
     flexDirection: 'row',
     height: 80,
-    paddingBottom: Platform.OS === 'ios' ? 25 : 15,
-    borderTopWidth: 0.5,
+    paddingBottom: Platform.OS === 'ios' ? 24 : 16,
+    borderTopRightRadius: 32,
+
   },
   tabButton: {
     flex: 1,

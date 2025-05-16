@@ -14,6 +14,7 @@ import DraggableFlatList, {
   RenderItemParams,
   OpacityDecorator 
 } from 'react-native-draggable-flatlist';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface PlayerItem {
   id: string;
@@ -44,6 +45,7 @@ export function PlayerDetailsCard({
 }: PlayerDetailsCardProps) {
   const { session } = useAuth();
   const colors = useThemeColors();
+  const insets = useSafeAreaInsets();
   const currentUserId = session?.user?.id;
 
   const formatStats = (gameAvg?: number, checkoutPercentage?: number) => {
@@ -82,7 +84,7 @@ export function PlayerDetailsCard({
               >
                 <GripVertical
                   size={16}
-                  color={colors.text.tertiary}
+                  color={colors.text.secondary}
                   onTouchStart={() => {
                     haptics.selectionFeedback();
                     drag();
@@ -144,20 +146,22 @@ export function PlayerDetailsCard({
         )}
       </View>
 
-      <Button
-        onPress={onOpenPlayerDrawer}
-        label="Add Player"
-        variant="secondary"
-        icon={Plus}
-        disabled={players.length >= 4}
-      />
+      <View style={[styles.buttonContainer, { paddingBottom: Math.max(insets.bottom / 3, spacing.xs) }]}>
+        <Button
+          onPress={onOpenPlayerDrawer}
+          label="Add Player"
+          variant="secondary"
+          icon={Plus}
+          disabled={players.length >= 4}
+        />
+      </View>
     </Card>
   );
 }
 
 const styles = StyleSheet.create({
   playersContainer: {
-    marginBottom: 0,
+    marginBottom: spacing.md,
     minHeight: 70,
   },
   listContainer: {
@@ -195,5 +199,9 @@ const styles = StyleSheet.create({
   emptyState: {
     paddingVertical: spacing.xl,
     alignItems: 'center',
+  },
+  buttonContainer: {
+    width: '100%',
+    zIndex: 5,
   },
 });

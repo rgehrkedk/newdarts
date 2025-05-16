@@ -54,6 +54,7 @@ export function PlayerDrawer({
   const { session } = useAuth();
   const currentUserId = session?.user?.id;
 
+  // Filter out already selected players from the available list
   const availablePlayers = players.filter(
     player => !selectedPlayers.some(p => p.id === player.id)
   );
@@ -73,6 +74,7 @@ export function PlayerDrawer({
     }
   }, [players, currentUserId, step]);
 
+  // Handle incoming props for editing or viewing a player
   useEffect(() => {
     if (editingPlayer) {
       setPlayerName(editingPlayer.name);
@@ -86,6 +88,7 @@ export function PlayerDrawer({
     }
   }, [editingPlayer, selectedPlayer]);
 
+  // Clean up on unmount or when drawer closes
   useEffect(() => {
     return () => {
       resetForm();
@@ -227,24 +230,22 @@ export function PlayerDrawer({
           )}
 
           {(step === 'new' || step === 'edit') && (
-            <>
-              <PlayerForm
-                name={playerName}
-                color={selectedColor}
-                isGuest={true}
-                isEditing={step === 'edit'}
-                onNameChange={setPlayerName}
-                onColorChange={setSelectedColor}
-                onGuestToggle={() => {}}
-                onSubmit={step === 'new' ? handleAddNewPlayer : handleEditPlayer}
-                onShowStats={editingSavedPlayer ? () => {
-                  setSelectedPlayerStats(editingSavedPlayer);
-                  navigateToStep('stats');
-                } : undefined}
-                onDelete={editingSavedPlayer?.isGuest ? () => setShowDeleteConfirm(true) : undefined}
-                player={editingSavedPlayer}
-              />
-            </>
+            <PlayerForm
+              name={playerName}
+              color={selectedColor}
+              isGuest={true}
+              isEditing={step === 'edit'}
+              onNameChange={setPlayerName}
+              onColorChange={setSelectedColor}
+              onGuestToggle={() => {}}
+              onSubmit={step === 'new' ? handleAddNewPlayer : handleEditPlayer}
+              onShowStats={editingSavedPlayer ? () => {
+                setSelectedPlayerStats(editingSavedPlayer);
+                navigateToStep('stats');
+              } : undefined}
+              onDelete={editingSavedPlayer?.isGuest ? () => setShowDeleteConfirm(true) : undefined}
+              player={editingSavedPlayer}
+            />
           )}
 
           {step === 'stats' && selectedPlayerStats && (

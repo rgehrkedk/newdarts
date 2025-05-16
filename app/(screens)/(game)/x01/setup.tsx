@@ -11,6 +11,7 @@ import { GameSettingsCard } from '@/components/features/game/setup/GameSettingsC
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Container } from '@/components/layout/Container';
 import { Header } from '@/components/layout/Header';
+import { StickyButtonContainer } from '@/components/core/molecules';
 
 interface PlayerItem {
   id: string;
@@ -114,46 +115,48 @@ export default function X01Setup() {
     <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
       <Header title="X01 Setup" showBackButton variant="solid" />
 
-      <View style={styles.mainContent}>
+      {/* Container with scrolling for all content */}
+      <Container scroll contentContainerStyle={styles.scrollContent}>
         {/* Players section with drag-and-drop managed by PlayerDetailsCard */}
-        <View style={styles.playerSection}>
-          <PlayerDetailsCard
-            players={players}
-            error={error}
-            onRemovePlayer={removePlayer}
-            onEditPlayer={handleEditPlayer}
-            onOpenPlayerDrawer={() => setDrawerVisible(true)}
-            onReorderPlayers={handleReorderPlayers}
-          />
-        </View>
+        <PlayerDetailsCard
+          players={players}
+          error={error}
+          onRemovePlayer={removePlayer}
+          onEditPlayer={handleEditPlayer}
+          onOpenPlayerDrawer={() => setDrawerVisible(true)}
+          onReorderPlayers={handleReorderPlayers}
+        />
 
-        {/* We wrap the rest in a ScrollView */}
-        <Container scroll contentContainerStyle={styles.scrollContent}>
-          <GameSettingsCard
-            gameVariant={gameVariant}
-            legs={legs}
-            sets={sets}
-            onGameVariantChange={setGameVariant}
-            onLegsChange={value => setLegs(Math.max(1, Math.min(9, value)))}
-            onSetsChange={value => setSets(Math.max(1, Math.min(9, value)))}
-          />
+        {/* Game settings */}
+        <GameSettingsCard
+          gameVariant={gameVariant}
+          legs={legs}
+          sets={sets}
+          onGameVariantChange={setGameVariant}
+          onLegsChange={value => setLegs(Math.max(1, Math.min(9, value)))}
+          onSetsChange={value => setSets(Math.max(1, Math.min(9, value)))}
+        />
 
-          {error ? (
-            <Animated.Text 
-              entering={FadeIn}
-              style={[styles.error, { color: colors.brand.error }]}
-            >
-              {error}
-            </Animated.Text>
-          ) : null}
+        {error ? (
+          <Animated.Text 
+            entering={FadeIn}
+            style={[styles.error, { color: colors.brand.error }]}
+          >
+            {error}
+          </Animated.Text>
+        ) : null}
 
-          <Button
-            onPress={startGame}
-            label="Start Game"
-            variant="primary"
-          />
-        </Container>
-      </View>
+        {/* Extra padding at the bottom to ensure content isn't hidden behind the sticky button */}
+        <View style={styles.bottomPadding} />
+      </Container>
+      
+      <StickyButtonContainer>
+        <Button
+          onPress={startGame}
+          label="Start Game"
+          variant="primary"
+        />
+      </StickyButtonContainer>
 
       <PlayerDrawer
         visible={drawerVisible}
@@ -170,20 +173,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  mainContent: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  playerSection: {
-    paddingHorizontal: spacing.container,
-    paddingTop: spacing.md,
-  },
   scrollContent: {
     gap: spacing.xl,
     paddingTop: spacing.md,
+    paddingHorizontal: spacing.container,
   },
   error: {
     textAlign: 'center',
+  },
+  bottomPadding: {
+    height: 80, // Extra space for the sticky button
   },
 });
