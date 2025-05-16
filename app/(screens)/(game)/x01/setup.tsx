@@ -1,4 +1,4 @@
-import { View, StyleSheet, ScrollView, Platform } from 'react-native';
+import { StyleSheet, Platform, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { spacing } from '@/constants/theme';
@@ -9,6 +9,8 @@ import { PlayerDrawer } from '@/components/features/players/PlayerDrawer';
 import { PlayerDetailsCard } from '@/components/features/players/PlayerDetailsCard';
 import { GameSettingsCard } from '@/components/features/game/setup/GameSettingsCard';
 import Animated, { FadeIn } from 'react-native-reanimated';
+import { Container } from '@/components/layout/Container';
+import { Header } from '@/components/layout/Header';
 
 interface PlayerItem {
   id: string;
@@ -107,50 +109,59 @@ export default function X01Setup() {
     });
   };
 
+  // Modified to avoid nesting issues
   return (
     <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <PlayerDetailsCard
-          players={players}
-          error={error}
-          onRemovePlayer={removePlayer}
-          onEditPlayer={handleEditPlayer}
-          onOpenPlayerDrawer={() => setDrawerVisible(true)}
-          onReorderPlayers={handleReorderPlayers}
-        />
+      <Header title="X01 Setup" showBackButton variant="solid" />
 
-        <GameSettingsCard
-          gameVariant={gameVariant}
-          legs={legs}
-          sets={sets}
-          onGameVariantChange={setGameVariant}
-          onLegsChange={value => setLegs(Math.max(1, Math.min(9, value)))}
-          onSetsChange={value => setSets(Math.max(1, Math.min(9, value)))}
-        />
+      <View style={styles.mainContent}>
+        {/* Players section with drag-and-drop managed by PlayerDetailsCard */}
+        <View style={styles.playerSection}>
+          <PlayerDetailsCard
+            players={players}
+            error={error}
+            onRemovePlayer={removePlayer}
+            onEditPlayer={handleEditPlayer}
+            onOpenPlayerDrawer={() => setDrawerVisible(true)}
+            onReorderPlayers={handleReorderPlayers}
+          />
+        </View>
 
-        {error ? (
-          <Animated.Text 
-            entering={FadeIn}
-            style={[styles.error, { color: colors.brand.error }]}
-          >
-            {error}
-          </Animated.Text>
-        ) : null}
+        {/* We wrap the rest in a ScrollView */}
+        <Container scroll contentContainerStyle={styles.scrollContent}>
+          <GameSettingsCard
+            gameVariant={gameVariant}
+            legs={legs}
+            sets={sets}
+            onGameVariantChange={setGameVariant}
+            onLegsChange={value => setLegs(Math.max(1, Math.min(9, value)))}
+            onSetsChange={value => setSets(Math.max(1, Math.min(9, value)))}
+          />
 
-        <Button
-          onPress={startGame}
-          label="Start Game"
-          variant="primary"
-        />
+          {error ? (
+            <Animated.Text 
+              entering={FadeIn}
+              style={[styles.error, { color: colors.brand.error }]}
+            >
+              {error}
+            </Animated.Text>
+          ) : null}
 
-        <PlayerDrawer
-          visible={drawerVisible}
-          onClose={handleCloseDrawer}
-          onSelectPlayer={handleSelectPlayer}
-          editingPlayer={editingPlayer}
-          selectedPlayers={players}
-        />
-      </ScrollView>
+          <Button
+            onPress={startGame}
+            label="Start Game"
+            variant="primary"
+          />
+        </Container>
+      </View>
+
+      <PlayerDrawer
+        visible={drawerVisible}
+        onClose={handleCloseDrawer}
+        onSelectPlayer={handleSelectPlayer}
+        editingPlayer={editingPlayer}
+        selectedPlayers={players}
+      />
     </View>
   );
 }
@@ -159,13 +170,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollView: {
+  mainContent: {
     flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  playerSection: {
+    paddingHorizontal: spacing.container,
+    paddingTop: spacing.md,
   },
   scrollContent: {
-    padding: spacing.container,
     gap: spacing.xl,
-    paddingTop: Platform.OS === 'ios' ? spacing.md : spacing.container,
+    paddingTop: spacing.md,
   },
   error: {
     textAlign: 'center',

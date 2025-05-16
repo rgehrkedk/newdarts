@@ -9,8 +9,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run start:tunnel` - Start the development server with tunnel for testing on physical devices
 - `npx tsc --noEmit` - Check TypeScript types without generating output files
 - `sh scripts/audit-imports.sh` - Audit and identify outdated import patterns
+- `sh scripts/update-imports.sh` - Batch update import patterns to new component structure
 - `sh scripts/test-new-screens.sh` - Test new screen structure for TypeScript errors
 - `sh scripts/remove-old-screens.sh` - Remove outdated screen files after migration
+- `npx eslint "app/**/*.tsx" --quiet` - Lint specific app components
 
 ## App Concept
 This is a Darts Scorer App built with Expo and React Native. It features:
@@ -145,6 +147,12 @@ EXPO_PUBLIC_SITE_URL=your_site_url
 
 ## Migration Notes
 The codebase appears to be transitioning from an older structure to a new Expo Router-based architecture. Work with files in `/app` directory rather than legacy files in `/backup` or `/backup-old-components` directories. When making changes to existing features, ensure the changes follow the new file-based routing pattern in the `/app` directory.
+
+## Prerequisites
+- Node.js 18+
+- npm or yarn
+- Expo CLI
+- Supabase account
 
 ## Performance Optimization
 The app implements several performance optimizations:

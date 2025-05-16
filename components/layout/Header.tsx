@@ -8,12 +8,15 @@ import { useTheme } from '@/hooks/useTheme';
 import { ChevronLeft } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 
+export type HeaderVariant = 'default' | 'solid';
+
 interface HeaderProps {
   title: string;
   showBackButton?: boolean;
   onBackPress?: () => void;
   rightContent?: React.ReactNode;
   blurIntensity?: number;
+  variant?: HeaderVariant;
 }
 
 export function Header({
@@ -22,6 +25,7 @@ export function Header({
   onBackPress,
   rightContent,
   blurIntensity = 40,
+  variant = 'default',
 }: HeaderProps) {
   const colors = useThemeColors();
   const { isDark } = useTheme();
@@ -35,13 +39,54 @@ export function Header({
     }
   };
 
+  // Solid variant with centered title
+  if (variant === 'solid') {
+    return (
+      <View 
+        style={[styles.container, { 
+          backgroundColor: colors.background.primary,
+          borderBottomColor: colors.border.primary,
+          borderRadius: 0,
+        }]}
+      >
+        <View style={styles.headerInner}>
+          {/* Left side with back button */}
+          <View style={styles.solidLeft}>
+            {showBackButton && (
+              <TouchableOpacity 
+                onPress={handleBack}
+                style={[styles.backButton, { backgroundColor: colors.background.tertiary + '90' }]}
+              >
+                <ChevronLeft size={20} color={colors.text.primary} />
+              </TouchableOpacity>
+            )}
+          </View>
+          
+          {/* Center with title */}
+          <View style={styles.solidCenter}>
+            <Text size="xl" weight="semibold" style={styles.solidHeaderText}>
+              {title}
+            </Text>
+          </View>
+          
+          {/* Right side with optional content or placeholder */}
+          <View style={styles.solidRight}>
+            {rightContent ? rightContent : 
+              (showBackButton && <View style={styles.backButtonPlaceholder} />)}
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  // Default blur variant
   return (
     <BlurView 
       intensity={blurIntensity} 
       tint={isDark ? 'dark' : 'light'}
       style={[styles.container, { 
         backgroundColor: colors.background.secondary + '80',
-        borderBottomColor: colors.border.primary,
+
       }]}
     >
       <View style={styles.headerInner}>
@@ -79,7 +124,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 1,
-    borderBottomWidth: 0.5,
+
     borderRadius: 24,
   },
   headerInner: {
@@ -95,16 +140,37 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  solidLeft: {
+    width: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
+  solidCenter: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  solidRight: {
+    width: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+  },
   backButton: {
     width: 36,
     height: 36,
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.sm,
   },
   headerText: {
     flex: 1,
+  },
+  solidHeaderText: {
+    textAlign: 'center',
+  },
+  backButtonPlaceholder: {
+    width: 36,
+    height: 36,
   },
   rightContainer: {
     flexDirection: 'row',
