@@ -6,6 +6,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { Text } from '@core/atoms/Text';
 import { Plus } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -153,7 +154,8 @@ function PlayButton({ onPress }: PlayButtonProps) {
               styles.playButtonGradient,
               { 
                 shadowColor: colors.black,
-                borderColor: colors.background.primary,
+                borderColor: colors.background.tertiary,
+                backgroundColor: 'transparent',
               }
             ]}
           >
@@ -181,6 +183,7 @@ interface TabBarProps {
 
 export function TabBar({ state, descriptors, navigation }: TabBarProps) {
   const colors = useThemeColors();
+  const { isDark } = useTheme();
   
   // Find the play tab index
   const playTabIndex = state.routes.findIndex(route => route.name === 'play');
@@ -194,35 +197,55 @@ export function TabBar({ state, descriptors, navigation }: TabBarProps) {
   }
   
   return (
-    <View style={[
-      styles.tabBarContainer,
-      {
-        backgroundColor: colors.background.primary,
-        borderTopColor: colors.border.primary,
-      }
-    ]}>
-      {arrangedRoutes.map((route, index) => {
+    <View style={styles.container}>
+      {/* Play button that sits on top and won't be cut off */}
+      <View style={styles.playButtonContainer}>
+        {arrangedRoutes.map((route, index) => {
+          const isPlayTab = route.name === 'play';
+          if (isPlayTab) {
+            return (
+              <PlayButton 
+                key={route.key}
+                onPress={() => navigation.navigate(route.name)}
+              />
+            );
+          }
+          return null;
+        })}
+      </View>
+      
+      {/* BlurView with the regular tab items */}
+      <BlurView 
+        intensity={30}
+        tint={isDark ? 'dark' : 'light'}
+        style={[
+          styles.tabBarContainer,
+          {
+            borderTopColor: 'transparent',
+            borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)',
+            borderWidth: 0.5,
+          }
+        ]}
+      >
+        {arrangedRoutes.map((route, index) => {
+          // Skip the play tab in the regular tab items since we render it separately
+          const isPlayTab = route.name === 'play';
+          if (isPlayTab) {
+            return <View key={route.key} style={styles.placeholderTab} />;
+          }
         // Find the original index to get the correct descriptor
         const originalIndex = state.routes.findIndex(r => r.key === route.key);
         const { options } = descriptors[route.key];
         const label = options.title || route.name;
         const isFocused = state.index === originalIndex;
         
-        // Special styling for the Play tab
-        const isPlayTab = route.name === 'play';
-        
         // Get the icon element
         const icon = options.tabBarIcon ? options.tabBarIcon({
           color: isFocused ? colors.brand.primary : colors.text.secondary,
-          size: isPlayTab ? 28 : 24,
+          size: 24,
         }) : null;
         
-        return isPlayTab ? (
-          <PlayButton 
-            key={route.key}
-            onPress={() => navigation.navigate(route.name)}
-          />
-        ) : (
+        return (
           <TouchableOpacity
             key={route.key}
             onPress={() => {
@@ -249,17 +272,41 @@ export function TabBar({ state, descriptors, navigation }: TabBarProps) {
           </TouchableOpacity>
         );
       })}
+      </BlurView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 80,
+  },
+  playButtonContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 80,
+    zIndex: 20,
+    pointerEvents: 'box-none',
+  },
   tabBarContainer: {
     flexDirection: 'row',
     height: 80,
     paddingBottom: Platform.OS === 'ios' ? 24 : 16,
     borderTopRightRadius: 32,
-
+    borderTopLeftRadius: 32,
+    overflow: 'hidden',
+    zIndex: 10,
+  },
+  placeholderTab: {
+    flex: 1,
+    opacity: 0,
   },
   tabButton: {
     flex: 1,
@@ -268,6 +315,7 @@ const styles = StyleSheet.create({
   },
   centerTabButton: {
     justifyContent: 'flex-start',
+    overflow: 'visible',
     paddingTop: 5,
   },
   playButtonGradient: {
@@ -275,6 +323,7 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: 32,
     justifyContent: 'center',
+    overflow: 'visible',
     alignItems: 'center',
     marginTop: -30,
     shadowOffset: { width: 0, height: 4 },
